@@ -7,9 +7,12 @@
     "evie": "~0.2.0",
     "panda-glob": "^0.1.2",
     "marked": "^0.3.2",
-    "c50n": "^0.6.0"
+    "c50n": "^0.6.0",
+    "jade": "^1.5.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "amen": "0.0.1"
+  },
   "scripts": {
     "prepublish": "coffee -o lib/ -c src/*.coffee",
     "test": "coffee test/index.coffee"

@@ -3,6 +3,7 @@ FileSystem = require "fs"
 glob = require "panda-glob"
 Evie = require "evie"
 md2html = require "marked"
+jade = require "jade"
 C50N = require "c50n"
 
 class Asset
@@ -23,7 +24,8 @@ class Asset
         go ->
           do Asset.events.concurrently (go) ->
             for file in files
-              go file, -> Asset.read(file)
+              do (file) ->
+                go file, -> Asset.read(file)
         go (assets) ->
           events.emit "success", assets
 
@@ -46,6 +48,25 @@ class Asset
     @formatters ?= {}
     @formatters[from] ?= {}
     @formatters[from][to] = formatter
+    @formatsFor ?= {}
+    @formatsFor[to] ?= []
+    @formatsFor[to].push from
+
+  @registerExtension: ({extension, format}) ->
+    Asset.extensions ?= {}
+    Asset.extensions[extension] = format
+    Asset.extensionFor ?= {}
+    Asset.extensionFor[format] = extension
+
+  @extensionsForFormat: (format) ->
+    for format in @formatsFor[format]
+      @extensionFor[format]
+
+  @patternForFormat: (format) ->
+    "*.{#{@extensionsForFormat(format)}}"
+
+  @globForFormat: (path, format) ->
+    @glob path, @patternForFormat(format)
 
   constructor: (@path, content) ->
     extension = extname @path
@@ -59,12 +80,14 @@ class Asset
       catch error
         Asset.events.emit "error", error
       @content = content[(divider+5)..]
+    else
+      @content = content
 
   render: (format, context = @context) ->
     Asset.formatters[@format]?[format]?(@content, @context)
 
-Asset.extensions =
-  md: "markdown"
+Asset.registerExtension extension: "md", format: "markdown"
+Asset.registerExtension extension: "jade", format: "jade"
 
 Asset.registerFormatter
   to: "html"
@@ -73,5 +96,11 @@ Asset.registerFormatter
     Asset.events.source (events) ->
       events.emit "success", md2html(markdown)
 
+Asset.registerFormatter
+  to: "html"
+  from:  "jade"
+  (markup, context) ->
+    Asset.events.source (events) ->
+      events.emit "success", jade.compile(markup)(context)
 
 module.exports = Asset
