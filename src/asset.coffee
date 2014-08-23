@@ -48,6 +48,7 @@ class Asset
 
   constructor: (@path, @content) ->
     @format = Asset.extensions[(extname @path)[1..]]
+    @key = basename @path
 
   render: (format, context = @context) ->
     Asset.formatters[@format]?[format]?(@content, @context)
