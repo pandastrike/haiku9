@@ -6,7 +6,8 @@
   "dependencies": {
     "evie": "~0.2.0",
     "panda-glob": "^0.1.2",
-    "marked": "^0.3.2"
+    "marked": "^0.3.2",
+    "c50n": "^0.6.0"
   },
   "devDependencies": {},
   "scripts": {

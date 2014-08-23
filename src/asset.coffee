@@ -1,8 +1,9 @@
 FileSystem = require "fs"
-{extname, join} = require "path"
+{basename, extname, join} = require "path"
 glob = require "panda-glob"
 Evie = require "evie"
 md2html = require "marked"
+C50N = require "c50n"
 
 class Asset
 
@@ -46,9 +47,18 @@ class Asset
     @formatters[from] ?= {}
     @formatters[from][to] = formatter
 
-  constructor: (@path, @content) ->
-    @format = Asset.extensions[(extname @path)[1..]]
-    @key = basename @path
+  constructor: (@path, content) ->
+    extension = extname @path
+    @key = basename @path, extension
+    @format = Asset.extensions[extension[1..]]
+    divider = content.indexOf("\n---\n")
+    if divider >= 0
+      frontmatter = content[0..(divider-1)]
+      try
+        @data = C50N.parse(frontmatter)
+      catch error
+        Asset.events.emit "error", error
+      @content = content[(divider+5)..]
 
   render: (format, context = @context) ->
     Asset.formatters[@format]?[format]?(@content, @context)
