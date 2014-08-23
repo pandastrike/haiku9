@@ -1,0 +1,33 @@
+{
+  "name": "haiku9",
+  "version": "0.0.0",
+  "description": "Stand-alone asset compilation",
+  "main": "index.js",
+  "dependencies": {
+    "evie": "~0.2.0",
+    "panda-glob": "^0.1.2",
+    "marked": "^0.3.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "prepublish": "coffee -o lib/ -c src/*.coffee",
+    "test": "coffee test/index.coffee"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/pandastrike/haiku9.git"
+  },
+  "keywords": [
+    "blog",
+    "jekyll",
+    "harp",
+    "asset",
+    "compilation"
+  ],
+  "author": "Dan Yoder <dan@pandastrike.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/pandastrike/haiku9/issues"
+  },
+  "homepage": "https://github.com/pandastrike/haiku9"
+}
