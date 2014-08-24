@@ -20,14 +20,17 @@ class Asset
 
   @readFiles: (files) ->
     @events.source (events) ->
-      do Asset.events.serially (go) ->
-        go ->
-          do Asset.events.concurrently (go) ->
-            for file in files
-              do (file) ->
-                go file, -> Asset.read(file)
-        go (assets) ->
-          events.emit "success", assets
+      if files.length > 0
+        do Asset.events.serially (go) ->
+          go ->
+            do Asset.events.concurrently (go) ->
+              for file in files
+                do (file) ->
+                  go file, -> Asset.read(file)
+          go (assets) ->
+            events.emit "success", assets
+      else
+        events.emit "success", []
 
   @readDir: (path) ->
     @events.source (events) ->
@@ -68,6 +71,20 @@ class Asset
   @globForFormat: (path, format) ->
     @glob path, @patternForFormat(format)
 
+  @globNameForFormat: (path, name, format) ->
+    @events.source (events) ->
+      Asset.glob path, "#{name}.{#{Asset.extensionsForFormat(format)}}"
+      .success (assets) ->
+        keys = Object.keys(assets)
+        if keys.length > 0
+          key = keys[0]
+          events.emit "success", assets[key]
+        else
+          events.emit "error",
+            new Error "Asset: No matching #{format} asset found "
+              +  " for #{join(path, name)}"
+      .error (error) -> events.emit error
+
   constructor: (@path, content) ->
     extension = extname @path
     @key = basename @path, extension
@@ -94,13 +111,15 @@ Asset.registerFormatter
   from:  "markdown"
   (markdown) ->
     Asset.events.source (events) ->
-      events.emit "success", md2html(markdown)
+      events.safely ->
+        events.emit "success", md2html(markdown)
 
 Asset.registerFormatter
   to: "html"
   from:  "jade"
   (markup, context) ->
     Asset.events.source (events) ->
-      events.emit "success", jade.compile(markup)(context)
+      events.safely ->
+        events.emit "success", jade.compile(markup)(context)
 
 module.exports = Asset
