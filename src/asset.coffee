@@ -4,6 +4,7 @@ glob = require "panda-glob"
 Evie = require "evie"
 md2html = require "marked"
 jade = require "jade"
+stylus = require "stylus"
 C50N = require "c50n"
 
 class Asset
@@ -65,15 +66,15 @@ class Asset
     for format in @formatsFor[format]
       @extensionFor[format]
 
-  @patternForFormat: (format) ->
-    "*.{#{@extensionsForFormat(format)}}"
+  @patternForFormat: (format, name="*") ->
+    "#{name}.{#{@extensionsForFormat(format)},}"
 
   @globForFormat: (path, format) ->
     @glob path, @patternForFormat(format)
 
   @globNameForFormat: (path, name, format) ->
     @events.source (events) ->
-      Asset.glob path, "#{name}.{#{Asset.extensionsForFormat(format)}}"
+      Asset.glob path, Asset.patternForFormat(format, name)
       .success (assets) ->
         keys = Object.keys(assets)
         if keys.length > 0
@@ -101,10 +102,17 @@ class Asset
       @content = content
 
   render: (format, context = @context) ->
-    Asset.formatters[@format]?[format]?(@content, @context)
+    formatter = Asset.formatters[@format]?[format]
+    formatter ?= Asset.identityFormatter
+    formatter(@content, context)
 
 Asset.registerExtension extension: "md", format: "markdown"
 Asset.registerExtension extension: "jade", format: "jade"
+Asset.registerExtension extension: "styl", format: "stylus"
+
+Asset.identityFormatter = (content) ->
+  Asset.events.source (events) ->
+    events.emit "success", content
 
 Asset.registerFormatter
   to: "html"
@@ -120,6 +128,15 @@ Asset.registerFormatter
   (markup, context) ->
     Asset.events.source (events) ->
       events.safely ->
-        events.emit "success", jade.compile(markup)(context)
+        render = jade.compile(markup)
+        events.emit "success", render(context)
+
+Asset.registerFormatter
+  to: "css"
+  from:  "stylus"
+  (code) ->
+    Asset.events.source (events) ->
+      events.safely ->
+        stylus.render code, events.callback
 
 module.exports = Asset

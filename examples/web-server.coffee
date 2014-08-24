@@ -6,8 +6,8 @@ Asset = require "../src/asset"
 
 http.createServer (request, response) ->
 
-  # Is this a request for an HTML asset?
-  if request.method is "GET" and request.headers.accept.match /html/
+  # Is this a GET request?
+  if request.method is "GET"
 
     # Parse out the directory and filename
     path = URL.parse(request.url).pathname[1..]
@@ -16,21 +16,35 @@ http.createServer (request, response) ->
     name = basename path, extension
     if name is "" then name = "index"
 
+    # Determine which format to use
+    format = if extension is ".css"
+      "css"
+    else if request.headers.accept.match /html/
+      "html"
+
     # Find the corresponding asset from the local filesystem
-    Asset.globNameForFormat directory, name, "html"
+    Asset.globNameForFormat directory, name, format
     .success (asset) ->
 
-      # Render it to HTML
-      asset.render "html"
+      # Render it to the desired format
+      asset.render format
       .success (html) ->
-        response.end html, 200
+        response.statusCode = 200
+        response.end html
 
       # Render error!
       .error (error) ->
-        response.end "Unknown server error: #{request.url}", 500
+        response.statusCode = 500
+        response.write "Uknown server error: #{request.url}"
+        response.end error.message
 
     # We were unable to find a corresponding asset
     .error ->
-      response.end "Not found: #{request.url}", 404
+      response.statusCode = 404
+      response.end "Not found: #{request.url}"
+
+  else
+    response.statusCode = 404
+    response.end "Not found: #{request.url}"
 
 .listen 1337

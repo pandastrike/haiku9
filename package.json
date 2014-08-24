@@ -8,7 +8,8 @@
     "panda-glob": "^0.1.2",
     "marked": "^0.3.2",
     "c50n": "^0.6.0",
-    "jade": "^1.5.0"
+    "jade": "^1.5.0",
+    "stylus": "^0.48.1"
   },
   "devDependencies": {
     "amen": "0.0.1"
