@@ -19,6 +19,8 @@ http.createServer (request, response) ->
     # Determine which format to use
     format = if extension is ".css"
       "css"
+    else if extension is ".js"
+      "javascript"
     else if request.headers.accept.match /html/
       "html"
 

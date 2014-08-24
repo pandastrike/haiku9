@@ -6,6 +6,7 @@ md2html = require "marked"
 jade = require "jade"
 stylus = require "stylus"
 C50N = require "c50n"
+CoffeeScript = require "coffee-script"
 
 class Asset
 
@@ -109,6 +110,8 @@ class Asset
 Asset.registerExtension extension: "md", format: "markdown"
 Asset.registerExtension extension: "jade", format: "jade"
 Asset.registerExtension extension: "styl", format: "stylus"
+Asset.registerExtension extension: "coffee", format: "coffeescript"
+Asset.registerExtension extension: "js", format: "javascript"
 
 Asset.identityFormatter = (content) ->
   Asset.events.source (events) ->
@@ -138,5 +141,13 @@ Asset.registerFormatter
     Asset.events.source (events) ->
       events.safely ->
         stylus.render code, events.callback
+
+Asset.registerFormatter
+  to: "javascript"
+  from:  "coffeescript"
+  (code) ->
+    Asset.events.source (events) ->
+      events.safely ->
+        events.emit "success", CoffeeScript.compile code
 
 module.exports = Asset
