@@ -105,6 +105,7 @@ class Asset
   render: (format, context = @context) ->
     formatter = Asset.formatters[@format]?[format]
     formatter ?= Asset.identityFormatter
+    context.filename = @path
     formatter(@content, context)
 
 Asset.registerExtension extension: "md", format: "markdown"
@@ -131,8 +132,8 @@ Asset.registerFormatter
   (markup, context) ->
     Asset.events.source (events) ->
       events.safely ->
-        render = jade.compile(markup)
-        events.emit "success", render(context)
+        context.cache = true
+        events.emit "success", jade.renderFile(context.filename, context)
 
 Asset.registerFormatter
   to: "css"
