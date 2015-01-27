@@ -1,7 +1,7 @@
 FileSystem = require "fs"
 {basename, extname, join} = require "path"
 glob = require "panda-glob"
-Evie = require "evie"
+{promise, all, attempt} = require "when"
 md2html = require "marked"
 jade = require "jade"
 stylus = require "stylus"
@@ -10,44 +10,41 @@ CoffeeScript = require "coffee-script"
 
 class Asset
 
-  @events: new Evie
-
   @read: (path) ->
-    @events.source (events) ->
+    promise (resolve, reject) ->
       FileSystem.readFile path, encoding: "utf8", (error, content) ->
         unless error?
-          events.emit "success", new Asset(path, content)
+          resolve new Asset(path, content)
         else
-          events.emit "error", error
+          reject error
 
   @readFiles: (files) ->
-    @events.source (events) ->
+    promise (resolve, reject) ->
       if files.length > 0
-        do Asset.events.serially (go) ->
-          go ->
-            do Asset.events.concurrently (go) ->
-              for file in files
-                do (file) ->
-                  go file, -> Asset.read(file)
-          go (assets) ->
-            events.emit "success", assets
+        all(
+          for file in files
+            Asset.read(file)
+        )
+        .then (assets) =>
+          resolve assets
       else
-        events.emit "success", []
+        resolve []
 
   @readDir: (path) ->
-    @events.source (events) ->
+    promise (resolve, reject) ->
       FileSystem.readdir path, (error, files) ->
         unless error?
           Asset.readFiles (join(path,file) for file in files)
-          .forward events
+          .then (assets) ->
+            resolve assets
         else
-          events.emit "error", error
+          reject error
 
   @glob: (path, pattern) ->
-    @events.source (events) ->
-      events.safely ->
-        Asset.readFiles (join(path, file) for file in glob(path, pattern))
-        .forward events
+    promise (resolve, reject) ->
+      Asset.readFiles (join(path, file) for file in glob(path, pattern))
+      .then (assets) ->
+        resolve assets
 
   @registerFormatter: ({to, from}, formatter) ->
     @formatters ?= {}
@@ -74,18 +71,20 @@ class Asset
     @glob path, @patternForFormat(format)
 
   @globNameForFormat: (path, name, format) ->
-    @events.source (events) ->
+    promise (resolve, reject) ->
       Asset.glob path, Asset.patternForFormat(format, name)
-      .success (assets) ->
+      .then (assets) ->
         keys = Object.keys(assets)
         if keys.length > 0
           key = keys[0]
-          events.emit "success", assets[key]
+          resolve assets[key]
         else
-          events.emit "error",
+          reject(
             new Error "Asset: No matching #{format} asset found "
               +  " for #{join(path, name)}"
-      .error (error) -> events.emit error
+          )
+      .catch (error) -> 
+        reject error
 
   constructor: (@path, content) ->
     extension = extname @path
@@ -97,7 +96,7 @@ class Asset
       try
         @data = C50N.parse(frontmatter)
       catch error
-        Asset.events.emit "error", error
+        console.log error
       @content = content[(divider+5)..]
     else
       @content = content
@@ -105,6 +104,7 @@ class Asset
   render: (format, context = @context) ->
     formatter = Asset.formatters[@format]?[format]
     formatter ?= Asset.identityFormatter
+    context ?= {}
     context.filename = @path
     formatter(@content, context)
 
@@ -115,40 +115,32 @@ Asset.registerExtension extension: "coffee", format: "coffeescript"
 Asset.registerExtension extension: "js", format: "javascript"
 
 Asset.identityFormatter = (content) ->
-  Asset.events.source (events) ->
-    events.emit "success", content
+  promise (resolve, reject) ->
+    resolve content
 
 Asset.registerFormatter
   to: "html"
   from:  "markdown"
   (markdown) ->
-    Asset.events.source (events) ->
-      events.safely ->
-        events.emit "success", md2html(markdown)
+    attempt(md2html,markdown)
 
 Asset.registerFormatter
   to: "html"
   from:  "jade"
   (markup, context) ->
-    Asset.events.source (events) ->
-      events.safely ->
-        context.cache = true
-        events.emit "success", jade.renderFile(context.filename, context)
+    context.cache = true
+    attempt(jade.renderFile, context.filename, context)
 
 Asset.registerFormatter
   to: "css"
   from:  "stylus"
   (code) ->
-    Asset.events.source (events) ->
-      events.safely ->
-        stylus.render code, events.callback
+    attempt(stylus.render, code)
 
 Asset.registerFormatter
   to: "javascript"
   from:  "coffeescript"
   (code) ->
-    Asset.events.source (events) ->
-      events.safely ->
-        events.emit "success", CoffeeScript.compile code
+    attempt(CoffeeScript.compile, code)
 
 module.exports = Asset
