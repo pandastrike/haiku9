@@ -8,7 +8,6 @@ http.createServer (request, response) ->
 
   # Is this a GET request?
   if request.method is "GET"
-
     # Parse out the directory and filename
     path = URL.parse(request.url).pathname[1..]
     directory = join __dirname, dirname path
@@ -26,22 +25,21 @@ http.createServer (request, response) ->
 
     # Find the corresponding asset from the local filesystem
     Asset.globNameForFormat directory, name, format
-    .success (asset) ->
-
+    .then (asset) ->
       # Render it to the desired format
       asset.render format
-      .success (html) ->
+      .then (html) ->
         response.statusCode = 200
         response.end html
 
       # Render error!
-      .error (error) ->
+      .catch (error) ->
         response.statusCode = 500
         response.write "Uknown server error: #{request.url}"
         response.end error.message
 
     # We were unable to find a corresponding asset
-    .error ->
+    .catch (err) ->
       response.statusCode = 404
       response.end "Not found: #{request.url}"
 
