@@ -28,18 +28,18 @@ http.createServer (request, response) ->
     # Find the corresponding asset from the local filesystem
     Asset.globNameForFormat directory, name, "html"
 
-    .success (asset) ->
+    .then (asset) ->
 
       # Render it to HTML
       asset.render "html"
-      .success (html) -> response.end html, 200
+      .then (html) -> response.end html, 200
 
       # Render error!
-      .error (error) ->
+      .catch (error) ->
         response.end "Unknown server error: #{request.url}", 500
 
     # We were unable to find a corresponding asset
-    .error -> response.end "Not found: #{request.url}", 404
+    .catch -> response.end "Not found: #{request.url}", 404
 
 .listen 1337
 ```
@@ -61,19 +61,19 @@ http.createServer (request, response) ->
 
 #### read(path)
 
-Reads the file at the given path. Returns an event channel. The success handler takes the Asset instance corresponding to the file.
+Reads the file at the given path. Returns a promise. The success handler takes the Asset instance corresponding to the file.
 
 #### readFiles(files)
 
-Reads the given files. Returns an event channel. The success handler takes an array of Asset instances corresponding to the files.
+Reads the given files. Returns a promise. The success handler takes an array of Asset instances corresponding to the files.
 
 #### readDir(path)
 
-Reads the files in the directory at the given path. Returns an event channel. The success handler takes an array of Asset instances corresponding to the files within the directory.
+Reads the files in the directory at the given path. Returns a promise. The success handler takes an array of Asset instances corresponding to the files within the directory.
 
 #### glob(path, pattern)
 
-Reads the files in the path based on the glob pattern. Returns an event channel. The success handler takes an array of Asset instances corresponding to the matching files within the directory.
+Reads the files in the path based on the glob pattern. Returns a promise. The success handler takes an array of Asset instances corresponding to the matching files within the directory.
 
 ##### Example
 
@@ -85,7 +85,7 @@ Asset.glob "posts", "*.md"
 
 #### globForFormat(path, format)
 
-Reads the files in the path that can be rendered into the given format. Returns an event channel. The success handler takes an array of Asset instances corresponding to the matching files within the directory.
+Reads the files in the path that can be rendered into the given format. Returns a promise. The success handler takes an array of Asset instances corresponding to the matching files within the directory.
 
 ##### Example
 
@@ -109,7 +109,7 @@ Asset.globNameForFormat docRoot, "index", "html"
 
 #### registerFormatter(spec, formatter)
 
-Register a formatter. The spec is an object with `to` and `from` properties. The `formatter` is a function. The formatter function should return an Evie event channel.
+Register a formatter. The spec is an object with `to` and `from` properties. The `formatter` is a function. The formatter function should return a promise.
 
 ##### Example
 
@@ -118,9 +118,8 @@ Asset.registerFormatter
   to: "html"
   from:  "jade"
   (markup, context) ->
-    Asset.events.source (events) ->
-      events.safely ->
-        events.emit "success", jade.compile(markup)(context)
+    context.cache = true
+    attempt(jade.renderFile, context.filename, context)
 ```
 
 #### registerExtension(spec)
@@ -139,4 +138,4 @@ An Asset constructor takes a path to the source file and the content of the file
 
 #### render(format, [context])
 
-Render the asset into the given format. Optionally, you can pass in a context. If the associated formatter supports it, the context will be available when rendering. Returns an Evie event channel. The success handler returns the result of the render.
+Render the asset into the given format. Optionally, you can pass in a context. If the associated formatter supports it, the context will be available when rendering. Returns a promise. The success handler returns the result of the render.
