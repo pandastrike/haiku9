@@ -1,23 +1,25 @@
 {
   "name": "haiku9",
-  "version": "0.0.0",
+  "version": "1.0.0-beta-01",
   "description": "Stand-alone asset compilation",
-  "main": "index.js",
+  "main": "lib/index.js",
   "dependencies": {
-    "when": "~3.6.2",
-    "panda-glob": "^0.1.2",
-    "marked": "^0.3.2",
-    "c50n": "^0.6.0",
+    "amen": "^1.0.0-alpha-06",
+    "c50n": "^0.7.2",
+    "coffee-script": "^1.9.1",
+    "fairmont": "^1.0.0-alpha-09",
     "jade": "^1.5.0",
+    "marked": "^0.3.2",
+    "mime-types": "^2.0.10",
+    "panda-glob": "^0.1.2",
     "stylus": "^0.48.1",
-    "coffee-script": "^1.7.1"
+    "when": "~3.6.2"
   },
-  "devDependencies": {
-    "amen": "0.0.1"
-  },
+  "devDependencies": {},
   "scripts": {
-    "prepublish": "coffee -o lib/ -c src/*.coffee",
-    "test": "coffee test/index.coffee"
+    "prepublish": "coffee --nodejs --harmony -o lib/ -c src/*.coffee",
+    "test": "coffee --nodejs --harmony test/index.coffee",
+    "watch": "coffee --nodejs --harmony -o lib/ -cw src/"
   },
   "repository": {
     "type": "git",

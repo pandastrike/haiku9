@@ -1,50 +1,30 @@
-FileSystem = require "fs"
+{read, readdir, async, collect, map, binary, curry} = require "fairmont"
 {basename, extname, join} = require "path"
+join = curry binary join
+{attempt, promise} = require "when"
 glob = require "panda-glob"
-{promise, all, attempt} = require "when"
 md2html = require "marked"
 jade = require "jade"
 stylus = require "stylus"
-C50N = require "c50n"
+# C50N = require "c50n"
+yaml = require "js-yaml"
 CoffeeScript = require "coffee-script"
 
 class Asset
 
-  @read: (path) ->
-    promise (resolve, reject) ->
-      FileSystem.readFile path, encoding: "utf8", (error, content) ->
-        unless error?
-          resolve new Asset(path, content)
-        else
-          reject error
+  @read: async (path) -> new Asset path, (yield read path)
 
-  @readFiles: (files) ->
-    promise (resolve, reject) ->
-      if files.length > 0
-        all(
-          for file in files
-            Asset.read(file)
-        )
-        .then (assets) =>
-          resolve assets
-      else
-        resolve []
+  @readFiles: async (files) ->
+    for file in files
+      yield Asset.read file
 
-  @readDir: (path) ->
-    promise (resolve, reject) ->
-      FileSystem.readdir path, (error, files) ->
-        unless error?
-          Asset.readFiles (join(path,file) for file in files)
-          .then (assets) ->
-            resolve assets
-        else
-          reject error
+  @readDir: async (path) ->
+    files = yield readdir path
+    Asset.readFiles (collect map (join path), files)
 
   @glob: (path, pattern) ->
-    promise (resolve, reject) ->
-      Asset.readFiles (join(path, file) for file in glob(path, pattern))
-      .then (assets) ->
-        resolve assets
+    files = glob path, pattern
+    Asset.readFiles (collect map (join path), files)
 
   @registerFormatter: ({to, from}, formatter) ->
     @formatters ?= {}
@@ -61,8 +41,12 @@ class Asset
     Asset.extensionFor[format] = extension
 
   @extensionsForFormat: (format) ->
-    for format in @formatsFor[format]
-      @extensionFor[format]
+    formats = @formatsFor[format]
+    if formats?
+      for format in [format, formats...]
+        @extensionFor[format]
+    else
+      [format]
 
   @patternForFormat: (format, name="*") ->
     "#{name}.{#{@extensionsForFormat(format)},}"
@@ -70,21 +54,11 @@ class Asset
   @globForFormat: (path, format) ->
     @glob path, @patternForFormat(format)
 
-  @globNameForFormat: (path, name, format) ->
-    promise (resolve, reject) ->
-      Asset.glob path, Asset.patternForFormat(format, name)
-      .then (assets) ->
-        keys = Object.keys(assets)
-        if keys.length > 0
-          key = keys[0]
-          resolve assets[key]
-        else
-          reject(
-            new Error "Asset: No matching #{format} asset found "
-              +  " for #{join(path, name)}"
-          )
-      .catch (error) -> 
-        reject error
+  @globNameForFormat: async (path, name, format) ->
+    assets = yield Asset.glob path, Asset.patternForFormat(format, name)
+    return v for k, v of assets
+    throw new Error "Asset: No matching #{format} asset found
+      for #{join(path, name)}"
 
   constructor: (@path, content) ->
     extension = extname @path
@@ -92,11 +66,11 @@ class Asset
     @format = Asset.extensions[extension[1..]]
     divider = content.indexOf("\n---\n")
     if divider >= 0
-      frontmatter = content[0..(divider-1)]
+      frontmatter = content[0...divider]
       try
-        @data = C50N.parse(frontmatter)
+        @data = yaml.safeLoad frontmatter
       catch error
-        console.log error
+        @data = {}
       @content = content[(divider+5)..]
     else
       @content = content
@@ -128,7 +102,7 @@ Asset.registerFormatter
   to: "html"
   from:  "jade"
   (markup, context) ->
-    context.cache = true
+    context.cache = false
     attempt(jade.renderFile, context.filename, context)
 
 Asset.registerFormatter
