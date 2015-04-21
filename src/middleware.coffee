@@ -36,9 +36,11 @@ create = (root) ->
         try
           response.setHeader 'content-type',
             (mime.contentType format) || (mime.contentType extension)
-          response.end (yield asset.render format), 200
+          response.end (yield asset.render format)
         catch error
-          response.end "Unknown server error: #{request.url}", 500
+          console.log error
+          response.statusCode = 500
+          response.end "Unknown server error: #{request.url}"
       catch error
         # We were unable to find a corresponding asset
         # response.end "Not found: #{request.url}", 404

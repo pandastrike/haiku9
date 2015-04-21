@@ -1,0 +1,10 @@
+#!/usr/bin/env coffee --nodejs --harmony
+options = require "commander"
+
+{port} = options
+  .version "1.0.0-alpha-01"
+  .option "-p ,--port <num>", "Port to listen on"
+  .parse process.argv
+
+server = require "../src/server"
+server.listen port, -> console.log "Listening on port #{port}"
