@@ -1,5 +1,5 @@
-{include, read, readdir, async,
-  collect, map, binary, curry} = require "fairmont"
+{include, read, read_buffer, write, readdir, async, keys,
+  first, rest, collect, map, binary, curry} = require "fairmont"
 {createReadStream} = require "fs"
 {basename, extname, join} = require "path"
 join = curry binary join
@@ -35,6 +35,10 @@ class Asset
     @formatsFor[to] ?= []
     @formatsFor[to].push from
 
+  @formatterFor: (source, target) ->
+    formatter = Asset.formatters[source]?[target]
+    formatter ?= Asset.identityFormatter
+
   @registerExtension: ({extension, format}) ->
     Asset.extensions ?= {}
     Asset.extensions[extension] = format
@@ -61,9 +65,25 @@ class Asset
 
   constructor: (@path) ->
     extension = extname @path
+    @extension = rest extension
     @key = basename @path, extension
-    @format = Asset.extensions[extension[1..]]
+    @format = Asset.extensions[@extension]
+    @format ?= @extension
+    @target = {}
+    formatters = Asset.formatters[@format]
+    @target.format = if formatters? then first keys formatters else @format
+    @target.extension = Asset.extensionFor[@target.format]
+    @target.extension ?= @target.format
     @context = {}
+
+  targetPath: (path) ->
+    if @target.extension?
+      join path, "#{@key}.#{@target.extension}"
+    else
+      join path, @key
+
+  write: async (path) ->
+    write (@targetPath path), yield @render()
 
     # divider = content.indexOf("\n---\n")
     # if divider >= 0
@@ -76,11 +96,8 @@ class Asset
     # else
     #   @content = content
 
-  render: (format, context) ->
-    formatter = Asset.formatters[@format]?[format]
-    formatter ?= Asset.identityFormatter
-    include @context, context
-    formatter @
+  render: ->
+    ((Asset.formatterFor @format, @target.format) @)
 
 Asset.registerExtension extension: "md", format: "markdown"
 Asset.registerExtension extension: "jade", format: "jade"
@@ -88,12 +105,12 @@ Asset.registerExtension extension: "styl", format: "stylus"
 Asset.registerExtension extension: "coffee", format: "coffeescript"
 Asset.registerExtension extension: "js", format: "javascript"
 
-Asset.identityFormatter = ({path}) -> createReadStream path
+Asset.identityFormatter = async ({path}) -> yield read_buffer path
 
 Asset.registerFormatter
   to: "html"
   from:  "markdown"
-  ({content}) -> md2html content
+  async ({path}) -> md2html (yield read path)
 
 Asset.registerFormatter
   to: "html"

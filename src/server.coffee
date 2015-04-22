@@ -1,9 +1,14 @@
 {resolve} = require "path"
-{async} = require "fairmont"
+{call} = require "fairmont"
 Middleware = require "./middleware"
-app = do require "express"
-root = resolve "public"
+express = require "express"
+app = express()
+
+source = resolve "public"
+destination = resolve "build"
+
 log = (require "log4js").getLogger("h9")
+
 logger = (request, response, next) ->
     {method, url} = request
     log.info "request", "#{method} #{url}"
@@ -12,8 +17,10 @@ logger = (request, response, next) ->
       code = response.statusCode
       log.info "respond", "#{method} #{url} #{code}"
 
-app.use logger
-app.use Middleware.create root
-# app.use log.response
+call ->
+  app.use logger
+  app.use (yield Middleware.create source, destination)
+  app.use express.static destination, extensions: [ 'html' ]
+  # app.use log.response
 
 module.exports = app
