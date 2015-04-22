@@ -3,17 +3,16 @@
 Middleware = require "./middleware"
 app = do require "express"
 root = resolve "public"
-logger = (require "log4js").getLogger()
-log =
-  request: (request, response, next) ->
+log = (require "log4js").getLogger("h9")
+logger = (request, response, next) ->
     {method, url} = request
-    logger.info "#{method} #{url}"
+    log.info "request", "#{method} #{url}"
     next()
     response.on "finish", ->
       code = response.statusCode
-      logger.info "#{method} #{url} #{code}"
+      log.info "respond", "#{method} #{url} #{code}"
 
-app.use log.request
+app.use logger
 app.use Middleware.create root
 # app.use log.response
 

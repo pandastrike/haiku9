@@ -1,19 +1,13 @@
 URL = require "url"
 {dirname, basename, extname, join} = require "path"
-{async} = require "fairmont"
+{async, first, rest, collect, select, keys, to_json, blank} = require "fairmont"
 mime = require "mime-types"
+accepts = require "accepts"
 Asset = require "./asset"
-
-classify = (accept) ->
-  switch
-    when accept.match /html/ then "html"
-    when accept.match /css/ then "css"
-    when accept.match /javascript/ then "javascript"
-    else undefined
-
 
 create = (root) ->
 
+  supported_formats = keys Asset.formatsFor
   async (request, response, next) ->
 
     # You can only GET things from this middleware
@@ -26,26 +20,24 @@ create = (root) ->
       name = basename path, extension
       if name == "" then name = "index"
 
-      format = classify request.headers.accept
-      format ?= classify mime.lookup extension
-      format ?= "text"
+      formats = if blank extension
+        supported_formats
+      else
+        [(rest extension), supported_formats...]
 
-      # Find the corresponding asset from the local filesystem
-      try
-        asset = yield Asset.globNameForFormat directory, name, format
-        try
+      acceptable = do (accept = accepts request)->
+        (format) -> accept.type [format]
+
+      for format in (collect select acceptable, formats)
+        assets = yield Asset.globNameForFormat directory, name, format
+        if (asset = first assets)?
           response.setHeader 'content-type',
             (mime.contentType format) || (mime.contentType extension)
-          response.end (yield asset.render format)
-        catch error
-          console.log error
-          response.statusCode = 500
-          response.end "Unknown server error: #{request.url}"
-      catch error
-        # We were unable to find a corresponding asset
-        # response.end "Not found: #{request.url}", 404
-        next()
-    else
-      next()
+          if (content = (yield asset.render format)).pipe?
+            content.pipe response
+          else
+            response.end content
+          return
+    next()
 
 module.exports = {create}
