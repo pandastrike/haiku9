@@ -4,4 +4,5 @@ program = require "commander"
 program
   .version('1.0.0-alpha-01')
   .command('server', 'run a Web server to serve your content')
+  .command('compile', 'compile the Web site to a given directory')
   .parse(process.argv);

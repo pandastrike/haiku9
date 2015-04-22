@@ -1,0 +1,17 @@
+#!/usr/bin/env coffee --nodejs --harmony
+{call} = require "fairmont"
+options = require "commander"
+{compile, clean} = require "../src/compile"
+
+{source, target} = options
+  .version "1.0.0-alpha-01"
+  .option "-t ,--target <path>", "Directory to compile into [build]"
+  .option "-s, --source <path>", "Directory to compile from [public]"
+  .parse process.argv
+
+source ?= "public"
+target ?= "build"
+
+call ->
+  yield clean target
+  yield compile source, target, true, false
