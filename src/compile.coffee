@@ -5,49 +5,56 @@
 log = (require "log4js").getLogger("h9")
 Asset = require "./asset"
 
-clean = async (path, recursive = true) ->
-  if yield exists path
-    files = yield readdir path
+clean = async ({target, recursive}) ->
+  recursive ?= true
+  if yield exists target
+    files = yield readdir target
     for file in files
-      _path = join path, file
-      if (yield is_directory _path)
-        (yield clean _path) if recursive
+      path = join target, file
+      if (yield is_directory path)
+        (yield clean path) if recursive
       else
-        yield rm _path
-    (yield rmdir path) if recursive
+        yield rm path
+    (yield rmdir target) if recursive
 
 hashes = {}
 mapping = {}
-compile = async (source, destination, recursive = true, watching = true) ->
+compile = async ({source, target, recursive, watching}) ->
+  recursive ?= true
+  watching ?= true
   log.info "Compiling [ #{source} ] ..."
-  yield mkdirp "0777", destination
+  yield mkdirp "0777", target
   if watching
     log.info "Watching [ #{source} ] ..."
     watch source, async ->
       # we only know something in this directory changed, so we don't
       # need to compile recursively, nor do we need to set up watchers
       # again...
-      yield compile source, destination, false, false
+      yield compile {source, target, recursive: false, watching: false}
   files = yield readdir source
-  for file in files when file[0] != "_"
+  for file in files when (file[0] != "_" && file[0] != ".")
     path = join source, file
     if (yield is_directory path)
       if recursive
-        yield (compile path, (join destination, file), true, watching)
+        yield (compile
+          source: path
+          target: (join target, file)
+          recursive: true
+          watching: watching)
     else
       asset = Asset.create path
-      mapping[asset.targetPath destination] = path
+      mapping[asset.targetPath target] = path
       try
-        yield asset.write destination
+        yield asset.write target
       catch error
         console.log error
   # remove files that no longer have a corresponding source
-  for file in (yield readdir destination)
-    path = join destination, file
+  for file in (yield readdir target)
+    path = join target, file
     if !(yield is_directory path)
-      # every file in the destination directory should have a mapping
+      # every file in the target directory should have a mapping
       # back to the original source. if the source file no longer exists
-      # delete the generated destination file and the mapping
+      # delete the generated target file and the mapping
       if !(yield exists mapping[path])
         yield rm path
         delete mapping[path]

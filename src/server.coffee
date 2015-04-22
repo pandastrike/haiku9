@@ -1,11 +1,9 @@
 {resolve} = require "path"
-{call} = require "fairmont"
+{async} = require "fairmont"
 Middleware = require "./middleware"
 express = require "express"
 app = express()
-
-source = resolve "public"
-destination = resolve "build"
+{compile, clean} = require "./compile"
 
 log = (require "log4js").getLogger("h9")
 
@@ -17,10 +15,20 @@ logger = (request, response, next) ->
       code = response.statusCode
       log.info "respond", "#{method} #{url} #{code}"
 
-call ->
-  app.use logger
-  app.use (yield Middleware.create source, destination)
-  app.use express.static destination, extensions: [ 'html' ]
-  # app.use log.response
 
-module.exports = app
+server = async ({source, target, port}) ->
+  console.log {source, target, port}
+
+  source = resolve source
+  target = resolve target
+
+  # do an initial build and set up watchers
+  yield clean {target}
+  yield compile {source, target}
+
+  express()
+  .use logger
+  .use express.static target, extensions: [ 'html' ]
+  .listen port, -> "Listening on port #{port}"
+
+module.exports = server

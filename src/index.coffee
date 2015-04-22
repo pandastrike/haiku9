@@ -1,3 +1,4 @@
 module.exports =
   Asset: require "./asset"
-  Middleware: require "./middleware"
+  server: require "./middleware"
+  compile: require "./compile"
