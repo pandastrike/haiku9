@@ -1,11 +1,12 @@
 {
   "name": "haiku9",
-  "version": "1.0.0-beta-01",
-  "description": "Stand-alone asset compilation",
+  "version": "1.1.0-alpha-01",
+  "description": "Asset compilation, static-site generator",
   "main": "lib/index.js",
   "bin": {
     "h9": "bin/h9",
-    "h9-server": "bin/h9-server"
+    "h9-server": "bin/h9-server",
+    "h9-compile": "bin/h9-compile"
   },
   "dependencies": {
     "accepts": "^1.2.5",
@@ -14,7 +15,7 @@
     "coffee-script": "^1.9.1",
     "commander": "^2.8.0",
     "express": "^4.12.3",
-    "fairmont": "^1.0.0-alpha-20",
+    "fairmont": "^1.0.0-alpha-21",
     "jade": "^1.9.2",
     "js-yaml": "^3.2.7",
     "log4js": "^0.6.24",
