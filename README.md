@@ -33,8 +33,10 @@ Once you're ready, you want to compile all your assets.
 $ h9 compile
 ```
 
-
 You can see other options with the `-h` or `--help` flags.
+
+**WARNING** Be careful with the flags you pass to the h9 commands. They delete the target build directory before compilation, and they don't sanity check the arguments. By default it just uses "./build". But if you pass it "/" as an argument, it will try to delete your whole filesystem.
+
 
 ## Rendering Rules
 
@@ -68,3 +70,5 @@ Markdown files will look for a `_layout.jade` file in the current directory or i
 * The logging is verbose and there is no option to turn it off or down. The workaround is just redirect to `/dev/null`.
 
 * There is no way to dynamically include content from other assets. You can do this statically, ex: `include:markdown some-markdown.md`. In most cases, between Jade's `include`, `extend`, and `mixin` features, this isn't a problem. But there are a few cases, like dynamically creating excerpts for blog posts, where it would be useful. The work around for now is to find a way to do whatever it is you're trying to do statically.
+
+* **WARNING** Be careful with the flags you pass to the h9 commands. They delete the target build directory before compilation, and they don't sanity check the arguments. By default it just uses "./build". But if you pass it "/" as an argument, it will try to delete your whole filesystem.
