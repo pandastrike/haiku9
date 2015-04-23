@@ -110,14 +110,14 @@ Asset.identityFormatter = async ({path}) -> yield read_buffer path
 Asset.registerFormatter
   to: "html"
   from:  "markdown"
-  async (asset) -> # md2html yield read asset.path
+  async (asset) ->
     if !asset.renderer?
       directory = dirname asset.path
       layout = "_layout"
       until layout.length > 13 || "_layout.jade" in (yield readdir directory)
         directory = resolve directory, ".."
         layout = join "..", layout
-      html = (md2html (yield read asset.path))
+      html = md2html yield read asset.path
         .replace /#\{/gm, "&num;{"
         .replace /\n/gm, "\n    "
       template = """
