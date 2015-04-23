@@ -1,5 +1,6 @@
 {watch} = require "fs"
-{join} = require "path"
+{basename, extname, join} = require "path"
+YAML = require "js-yaml"
 {async, mkdirp, read, readdir, is_directory, rmdir, rm,
   stat, exists} = require "fairmont"
 log = (require "log4js").getLogger("h9")
@@ -49,7 +50,7 @@ compile = async ({source, target, recursive, watching}) ->
         asset.context = public: data
         yield asset.write target
       catch error
-        console.log error
+        log.error error
   # remove files that no longer have a corresponding source
   for file in (yield readdir target)
     path = join target, file
@@ -74,9 +75,11 @@ compileData = async ({root, source, watching, recursive}) ->
           source: path
           watching: watching
           recursive: true
-    else if file == "_data.json"
-      # root._data = yaml.safeLoad (yield read path)
-      root._data = JSON.parse (yield read path)
+    else
+      extension = extname file
+      key = basename file, extension
+      if extension == ".yml" || extension == ".yaml"
+        root[key] = YAML.safeLoad (yield read path)
   root
 
 module.exports = {compile, clean}
