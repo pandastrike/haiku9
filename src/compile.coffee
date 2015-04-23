@@ -2,7 +2,7 @@
 {basename, extname, join} = require "path"
 YAML = require "js-yaml"
 {async, mkdirp, read, readdir, is_directory, rmdir, rm,
-  stat, exists} = require "fairmont"
+  stat, exists, merge, rest} = require "fairmont"
 log = (require "log4js").getLogger("h9")
 Asset = require "./asset"
 
@@ -20,10 +20,11 @@ clean = async ({target, recursive}) ->
 
 mapping = {}
 data = undefined
-compile = async ({source, target, recursive, watching}) ->
+compile = async ({source, target, context, recursive, watching}) ->
   recursive ?= true
   watching ?= true
   data ?= yield compileData {root: {}, source, recursive, watching}
+  context ?= data
   log.info "Compiling [ #{source} ] ..."
   yield mkdirp "0777", target
   if watching
@@ -32,7 +33,7 @@ compile = async ({source, target, recursive, watching}) ->
       # we only know something in this directory changed, so we don't
       # need to compile recursively, nor do we need to set up watchers
       # again...
-      yield compile {source, target, recursive: false, watching: false}
+      yield compile {source, target, context, recursive: false, watching: false}
   files = yield readdir source
   for file in files when (file[0] != "_" && file[0] != ".")
     path = join source, file
@@ -41,13 +42,14 @@ compile = async ({source, target, recursive, watching}) ->
         yield compile
           source: path
           target: (join target, file)
+          context: context[file]
           recursive: true
           watching: watching
     else
       asset = Asset.create path
       mapping[asset.targetPath target] = path
       try
-        asset.context = public: data
+        asset.context = merge data, context, key: asset.key
         yield asset.write target
       catch error
         log.error error
@@ -77,7 +79,7 @@ compileData = async ({root, source, watching, recursive}) ->
           recursive: true
     else
       extension = extname file
-      key = basename file, extension
+      key = rest basename file, extension
       if extension == ".yml" || extension == ".yaml"
         root[key] = YAML.safeLoad (yield read path)
   root
