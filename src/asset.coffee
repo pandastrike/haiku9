@@ -71,10 +71,10 @@ class Asset
     @format ?= @extension
     @target = {}
     formatters = Asset.formatters[@format]
-    @target.format = if formatters? then first keys formatters else @format
+    @supportedFormats = if formatters? then keys formatters else [@format]
+    @target.format = first @supportedFormats
     @target.extension = Asset.extensionFor[@target.format]
     @target.extension ?= @target.format
-    @context = {}
 
   targetPath: (path) ->
     if @target.extension?
@@ -99,6 +99,7 @@ class Asset
   render: ->
     ((Asset.formatterFor @format, @target.format) @)
 
+
 Asset.registerExtension extension: "md", format: "markdown"
 Asset.registerExtension extension: "jade", format: "jade"
 Asset.registerExtension extension: "styl", format: "stylus"
@@ -115,9 +116,10 @@ Asset.registerFormatter
 Asset.registerFormatter
   to: "html"
   from:  "jade"
-  ({path, context}) ->
-    context.cache = false
-    jade.renderFile path, context
+  (asset) ->
+    {path} = asset
+    asset.renderer ?= jade.compileFile path, cach: false
+    asset.renderer asset.context
 
 Asset.registerFormatter
   to: "css"

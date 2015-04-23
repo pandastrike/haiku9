@@ -1,6 +1,5 @@
 {resolve} = require "path"
 {async} = require "fairmont"
-Middleware = require "./middleware"
 express = require "express"
 app = express()
 {compile, clean} = require "./compile"
@@ -17,7 +16,6 @@ logger = (request, response, next) ->
 
 
 server = async ({source, target, port}) ->
-  console.log {source, target, port}
 
   source = resolve source
   target = resolve target
@@ -29,6 +27,6 @@ server = async ({source, target, port}) ->
   express()
   .use logger
   .use express.static target, extensions: [ 'html' ]
-  .listen port, -> "Listening on port #{port}"
+  .listen port, -> log.info "Listening on port #{port}"
 
 module.exports = server

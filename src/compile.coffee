@@ -1,6 +1,6 @@
 {watch} = require "fs"
 {join} = require "path"
-{async, mkdirp, readdir, is_directory, rmdir, rm,
+{async, mkdirp, read, readdir, is_directory, rmdir, rm,
   stat, exists} = require "fairmont"
 log = (require "log4js").getLogger("h9")
 Asset = require "./asset"
@@ -12,16 +12,17 @@ clean = async ({target, recursive}) ->
     for file in files
       path = join target, file
       if (yield is_directory path)
-        (yield clean path) if recursive
+        (yield clean target: path) if recursive
       else
         yield rm path
     (yield rmdir target) if recursive
 
-hashes = {}
 mapping = {}
+data = undefined
 compile = async ({source, target, recursive, watching}) ->
   recursive ?= true
   watching ?= true
+  data ?= yield compileData {root: {}, source, recursive, watching}
   log.info "Compiling [ #{source} ] ..."
   yield mkdirp "0777", target
   if watching
@@ -36,15 +37,16 @@ compile = async ({source, target, recursive, watching}) ->
     path = join source, file
     if (yield is_directory path)
       if recursive
-        yield (compile
+        yield compile
           source: path
           target: (join target, file)
           recursive: true
-          watching: watching)
+          watching: watching
     else
       asset = Asset.create path
       mapping[asset.targetPath target] = path
       try
+        asset.context = public: data
         yield asset.write target
       catch error
         console.log error
@@ -58,5 +60,23 @@ compile = async ({source, target, recursive, watching}) ->
       if !(yield exists mapping[path])
         yield rm path
         delete mapping[path]
+
+compileData = async ({root, source, watching, recursive}) ->
+  if watching
+    watch source, ->
+      compileData {root, source, watching: false, recursive: false}
+  for file in (yield readdir source)
+    path = join source, file
+    if (yield is_directory path)
+      if recursive
+        yield compileData
+          root: (root[file] ?= {})
+          source: path
+          watching: watching
+          recursive: true
+    else if file == "_data.json"
+      # root._data = yaml.safeLoad (yield read path)
+      root._data = JSON.parse (yield read path)
+  root
 
 module.exports = {compile, clean}
