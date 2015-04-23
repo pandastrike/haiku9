@@ -25,11 +25,14 @@
     "stylus": "^0.48.1",
     "when": "~3.6.2"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "json": "^9.0.3"
+  },
   "scripts": {
     "prepublish": "coffee --nodejs --harmony -o lib/ -c src/*.coffee",
     "test": "coffee --nodejs --harmony test/index.coffee",
-    "watch": "coffee --nodejs --harmony -o lib/ -cw src/"
+    "watch": "coffee --nodejs --harmony -o lib/ -cw src/",
+    "tag": "(node_modules/.bin/json -f package.json version | tee VERSION | xargs -I version git tag -am version version) && git push --tags"
   },
   "repository": {
     "type": "git",

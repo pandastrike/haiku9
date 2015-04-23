@@ -1,141 +1,70 @@
 # Haiku9
 
-This is a simple asset compiler. The main thing is that it's simple and you can use it independent of anything else.
+Haiku9 is an Web asset compiler. It currently supports:
 
-## Example
+* Jade templates
+* Markdown
+* CoffeeScript
+* Stylus
 
-Here's a simple Web server that handles requests for HTML assets. We use the `globFileForFormat` method to map request URLs to local files. This will return any files that can be rendered into the given format (in this case, `html`).
+All other assets are pass-throughs.
 
-```coffee-script
-http = require "http"
-URL = require "url"
-{dirname, basename, extname, join} = require "path"
+## Installation
 
-Asset = require "haiku9"
-
-http.createServer (request, response) ->
-
-  # Is this a request for an HTML asset?
-  if request.method is "GET" and request.headers.accept.match /html/
-
-    # Parse out the directory and filename
-    path = URL.parse(request.url).pathname[1..]
-    directory = join __dirname, dirname path
-    extension = extname path
-    name = basename path, extension
-    if name is "" then name = "index"
-
-    # Find the corresponding asset from the local filesystem
-    Asset.globNameForFormat directory, name, "html"
-
-    .then (asset) ->
-
-      # Render it to HTML
-      asset.render "html"
-      .then (html) -> response.end html, 200
-
-      # Render error!
-      .catch (error) ->
-        response.end "Unknown server error: #{request.url}", 500
-
-    # We were unable to find a corresponding asset
-    .catch -> response.end "Not found: #{request.url}", 404
-
-.listen 1337
+```shell
+$ npm install -g haiku9
 ```
 
-## Features
+## Running the Server
 
-* Front-matter supported for any format
-* Extensible format support: just call `Asset.registerFormatter` and (if necessary) `Asset.registerExtension`
-* Built-in support for Markdown, CoffeeScript, Jade, Stylus, and Markdown
+During the development, you'll want to run a simple static server.
 
-
-## Install
-
-    npm install haiku9
-
-## Reference
-
-### Class Methods
-
-#### read(path)
-
-Reads the file at the given path. Returns a promise. The success handler takes the Asset instance corresponding to the file.
-
-#### readFiles(files)
-
-Reads the given files. Returns a promise. The success handler takes an array of Asset instances corresponding to the files.
-
-#### readDir(path)
-
-Reads the files in the directory at the given path. Returns a promise. The success handler takes an array of Asset instances corresponding to the files within the directory.
-
-#### glob(path, pattern)
-
-Reads the files in the path based on the glob pattern. Returns a promise. The success handler takes an array of Asset instances corresponding to the matching files within the directory.
-
-##### Example
-
-Return all the markdown blog posts:
-
-```coffee-script
-Asset.glob "posts", "*.md"
+```shell
+$ h9 server
 ```
 
-#### globForFormat(path, format)
+You can see other options with the `-h` or `--help` flags.
 
-Reads the files in the path that can be rendered into the given format. Returns a promise. The success handler takes an array of Asset instances corresponding to the matching files within the directory.
+## Compilation
 
-##### Example
+Once you're ready, you want to compile all your assets.
 
-Return all the blog posts regardless of format:
-
-```coffee-script
-Asset.globForFormat "posts", "html"
+```shell
+$ h9 compile
 ```
 
-#### globNameForFormat(path, name, format)
 
-Reads the file corresponding to the given path and name that can be rendered into the given format. The success handler takes the matching Asset instance.
+You can see other options with the `-h` or `--help` flags.
 
-##### Example
+## Rendering Rules
 
-Return the `index.html` asset, regardless of source format:
+* Anything with an underscore is skipped. Everything else is processed.
+* YAML files are added to the context (locals) available in Jade.
+* Markdown files look for a Jade `_layout` file to use as a rendering context.
 
-```coffee-script
-Asset.globNameForFormat docRoot, "index", "html"
+## More on the Rendering Context
+
+Data files for the entire site are available in the rendering context, as well as the current directory. So if you have a `_site.yml` file in your root directory, that will be accessible as the `site` variable in Jade.
+
+Similarly, if you have a directory called `posts` in your root directory which contains a file called `_data.yml`, that will be available as `posts.data` in your Jade templates. From within an asset in the `posts` directory, it can also be accessed simply as `data`.
+
+Additionally, the `key` (aka slug) is available. Thus, you can access data specific to an asset by providing a data file with asset keys as the keys to a hash. For example, if you have an asset called `my-blog-post.md` you'd want a data file in the same directory that looks like this.
+
+```yml
+my-blog-post:
+  title: "An Unfortunate Series of Events"
 ```
 
-#### registerFormatter(spec, formatter)
+## Markdown Rendering
 
-Register a formatter. The spec is an object with `to` and `from` properties. The `formatter` is a function. The formatter function should return a promise.
+Markdown files will look for a `_layout.jade` file in the current directory or in an ancestor directory. The Jade template should have a `content` block.
 
-##### Example
+## Known Problems
 
-```coffee-script
-Asset.registerFormatter
-  to: "html"
-  from:  "jade"
-  (markup, context) ->
-    context.cache = true
-    attempt(jade.renderFile, context.filename, context)
-```
+* The server watches directories for changes. This has the drawback of meaning that changes outside the directory being watched, such as to a layout file in a parent directory, won't trigger a recompilation of the affected files. The workaround for now is just to save or `touch` the file you want recompiled.
 
-#### registerExtension(spec)
+* Errors related to rendering markdown are lost. Haiku9 cannot see into the compilation process to see what went wrong. So it can only report that there was a problem. The workaround is to convert your markdown file into a Jade file temporarily to see what the problem is.
 
-Register an extension correspoding to a format. The spec is an object with `format` and `extension` properties.
+* The logging is verbose and there is no option to turn it off or down. The workaround is just redirect to `/dev/null`.
 
-##### Example
-
-Asset.registerExtension extension: "md", format: "markdown"
-
-### Instance Methods
-
-#### constructor(path, content)
-
-An Asset constructor takes a path to the source file and the content of the file. The path is parsed to extract a `key` property for the asset and its `format`. The content is parsed for front-matter.
-
-#### render(format, [context])
-
-Render the asset into the given format. Optionally, you can pass in a context. If the associated formatter supports it, the context will be available when rendering. Returns a promise. The success handler returns the result of the render.
+* There is no way to dynamically include content from other assets. You can do this statically, ex: `include:markdown some-markdown.md`. In most cases, between Jade's `include`, `extend`, and `mixin` features, this isn't a problem. But there are a few cases, like dynamically creating excerpts for blog posts, where it would be useful. The work around for now is to find a way to do whatever it is you're trying to do statically.
