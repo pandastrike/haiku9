@@ -1,8 +1,14 @@
-#!/usr/bin/env coffee --nodejs --harmony
+#!/usr/bin/env coffee
+{join} = require "path"
 program = require "commander"
+{call, read} = require "fairmont"
 
-program
-  .version('1.0.0-alpha-01')
-  .command('server', 'run a Web server to serve your content')
-  .command('compile', 'compile the Web site to a given directory')
-  .parse(process.argv);
+call ->
+
+  version = yield read join __dirname, "..", "VERSION"
+
+  program
+    .version(version)
+    .command('serve', 'run a Web server to serve your content')
+    .command('build', 'compile the Web site assets into the given directory')
+    .parse(process.argv);

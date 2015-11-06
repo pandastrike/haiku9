@@ -1,4 +1,4 @@
-module.exports =
-  Asset: require "./asset"
-  server: require "./middleware"
-  compile: require "./compile"
+require "./data"
+require "./survey"
+require "./build"
+require "./serve"

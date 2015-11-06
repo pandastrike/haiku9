@@ -1,0 +1,20 @@
+#!/usr/bin/env coffee
+options = require "commander"
+
+# {port, source, target} = options
+#   .version "1.0.0-alpha-01"
+#   .option "-p ,--port <num>", "Port to listen on [8080]"
+#   .option "-t ,--target <path>", "Directory to compile into [build]"
+#   .option "-s, --source <path>", "Directory to compile from [public]"
+#   .parse process.argv
+#
+# source ?= "public"
+# target ?= "build"
+# port ?= "8080"
+
+options
+.parse process.argv
+
+require "../src"
+{task} = require "panda-9000"
+task "serve"

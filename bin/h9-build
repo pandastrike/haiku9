@@ -1,0 +1,22 @@
+#!/usr/bin/env coffee
+
+options = require "commander"
+require "../src"
+{task} = require "panda-9000"
+
+# {source, target, watch} = options
+#   .version "1.0.0-alpha-01"
+#   .option "-t ,--target <path>", "Directory to compile into [build]"
+#   .option "-s, --source <path>", "Directory to compile from [public]"
+#   # .option "-w, --watch", "Watch for changes and recompile [false]"
+#   .parse process.argv
+#
+# source ?= "public"
+# target ?= "build"
+# watch ?= false
+# recursive = true
+
+options
+.parse process.argv
+
+task "build"
