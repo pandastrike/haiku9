@@ -26,6 +26,8 @@ Data =
     head
 
   augment: (asset) ->
+    asset.data.name = asset.name
+    asset.data.path = asset.path
     include asset.data, Data.root, Data.get asset.path
 
 task "data", async ->

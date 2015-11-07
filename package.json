@@ -1,6 +1,6 @@
 {
   "name": "haiku9",
-  "version": "1.1.0-alpha-02",
+  "version": "1.1.0-alpha-03",
   "description": "Asset compilation, static-site generator",
   "main": "lib/index.js",
   "bin": {
@@ -16,7 +16,9 @@
     "js-yaml": "^3.4.0",
     "marked": "^0.3.5",
     "mime-types": "^2.1.6",
-    "panda-9000": "1.0.0-alpha-04"
+    "panda-9000": "1.0.0-alpha-05",
+    "rimraf": "^2.4.3",
+    "when": "^3.7.4"
   },
   "devDependencies": {
     "json": "^9.0.3"
@@ -25,6 +27,7 @@
     "prepublish": "coffee -o lib/ -c src/*.coffee",
     "test": "coffee test/index.coffee",
     "watch": "coffee -o lib/ -cw src/",
+    "version": "(node_modules/.bin/json -f package.json version > VERSION)",
     "tag": "(node_modules/.bin/json -f package.json version | tee VERSION | xargs -I version git tag -am version version) && git push --tags"
   },
   "repository": {

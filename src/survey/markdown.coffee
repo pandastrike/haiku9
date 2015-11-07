@@ -21,7 +21,9 @@ task "survey/markdown", "data", ->
 
 define render, (isType type), async (asset) ->
   {source} = asset
-  markdown = (yield read source.path).replace /\n/gm, "\n    "
+  markdown = (yield read source.path)
+    .replace /\n/gm, "\n    "
+    .replace /\#\{/g, '\\#{'
   source.content = """
     extends _layout
     block content
