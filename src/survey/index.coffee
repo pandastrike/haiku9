@@ -1,3 +1,4 @@
+require "./pass-thru"
 require "./image"
 require "./stylus"
 require "./jade"

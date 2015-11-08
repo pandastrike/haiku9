@@ -1,6 +1,3 @@
-# TODO: for now, these are just the same as the pass-thru assets
-# but the idea is to add on-the-fly image optimization
-
 {createReadStream} = require "fs"
 {go, map, tee, reject,
 w, include, Type, isType, isMatch, Method,
@@ -10,11 +7,11 @@ glob} = require "fairmont"
 {save, render} = Asset = require "../asset"
 {source} = require "../configuration"
 
-formats = w ".jpg .png .webp .svg .gif .ico"
+formats = w ".css .js"
 
 type = Type.define Asset
 
-task "survey/image", ->
+task "survey/pass-thru", ->
   go [
     glob "**/*{#{formats.join ','}}", source
     reject (path) -> isMatch /(^|\/)_/, path
