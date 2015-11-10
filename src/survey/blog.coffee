@@ -5,7 +5,7 @@ async, include, Type, isType,
 read, glob,
 Method} = require "fairmont"
 {define} = Method
-{task, createContext, compileJade} = require "panda-9000"
+{task, context, jade} = require "panda-9000"
 {find, save, render} = Asset = require "../asset"
 {source, blog} = require "../configuration"
 Data = require "../data"
@@ -25,7 +25,7 @@ type = Type.define Asset
 task "survey/posts", "survey/markdown", ->
   go [
     glob "posts/*.md", source
-    map createContext source
+    map context source
     map ({path}) -> {path, extension: ".html"}
     map Asset.find
     reverse
@@ -64,4 +64,4 @@ define render, (isType type), async (asset) ->
   for item in asset.data.items
     markdown = (yield read item.source.path).split( "<!-- more -->")[0]
     item.excerpt = marked markdown
-  compileJade asset
+  jade asset

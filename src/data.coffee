@@ -1,6 +1,6 @@
 {sep} = require "path"
 {curry, go, map, tee, async, include, read, glob} = require "fairmont"
-{task, createContext} = require "panda-9000"
+{task, context} = require "panda-9000"
 yaml = require "js-yaml"
 loadYAML = async (path) -> yaml.safeLoad yield read path
 {source} = require "./configuration"
@@ -33,7 +33,7 @@ Data =
 task "data", async ->
   yield go [
     glob "**/*.yaml", source
-    map createContext source
+    map context source
     tee async (context) ->
       context.path = context.path.replace /(^|\/)_/, "$1"
       Data.set context.path, yield loadYAML context.source.path

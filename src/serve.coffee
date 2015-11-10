@@ -5,7 +5,7 @@ mime = require "mime-types"
 {async, isReadStream,
 spread,
 events, go, map, tee} = require "fairmont"
-{task, createContext} = require "panda-9000"
+{task, context} = require "panda-9000"
 {find, render} = require "./asset"
 {source, server} = require "./configuration"
 
@@ -42,7 +42,7 @@ task "serve", "survey", ->
     tee async ({request, response}) ->
 
       try
-        {path, source} = createContext "/", request.url
+        {path, source} = context "/", request.url
         extension = if source.extension == ""
           ".html"
         else
