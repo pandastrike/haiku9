@@ -7,7 +7,7 @@ glob} = require "fairmont"
 {save, render} = Asset = require "../asset"
 {source} = require "../configuration"
 
-formats = w ".css .js"
+formats = w ".html .css .js .woff .ttf"
 
 type = Type.define Asset
 

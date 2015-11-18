@@ -43,7 +43,7 @@ task "survey/posts", "survey/markdown", ->
           asset = include (Type.create type),
             path: if n == 0 then "blog/index" else "blog/#{n}"
             source:
-              path: join source, "blog/_page.jade"
+              path: join source, blog.page.template
             target:
               extension: ".html"
             data:

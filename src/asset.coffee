@@ -1,4 +1,4 @@
-{iterator, values, Method, Type, include} = require "fairmont"
+{iterator, values, first, Method, Type, include} = require "fairmont"
 
 Asset = Type.define()
 
@@ -11,11 +11,15 @@ include Asset,
   iterator: -> iterator values _assets
 
   find: ({path, extension}) ->
-    if (asset = _assets[path])?
-      if !extension? || (asset.target.extension == extension)
-        asset
+    if (rx = _assets[path])?
+      if !extension
+        first values rx
+      else
+        rx[extension]
 
-  save: (asset) -> _assets[asset.path] = asset
+  save: (asset) ->
+    _assets[asset.path] ?= {}
+    _assets[asset.path][asset.target.extension] = asset
 
   render: Method.create()
 

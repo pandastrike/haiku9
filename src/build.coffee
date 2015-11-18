@@ -1,9 +1,9 @@
-{go, tee, pull, async} = require "fairmont"
+{go, tee, pull, values, async} = require "fairmont"
 {task, write} = require "panda-9000"
 {lift} = require "when/node"
 rmrf = lift require "rimraf"
 
-Asset = require "./asset"
+{render} = Asset = require "./asset"
 {source, target} = require "./configuration"
 
 task "build", "survey", async ->
@@ -12,7 +12,11 @@ task "build", "survey", async ->
 
   yield go [
     Asset.iterator()
-    tee Asset.render
-    pull
-    tee write target
+    tee async (formats) ->
+      yield go [
+        values formats
+        tee render
+        pull
+        tee write target
+      ]
   ]
