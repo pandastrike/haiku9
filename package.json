@@ -1,6 +1,6 @@
 {
   "name": "haiku9",
-  "version": "1.1.0-alpha-07",
+  "version": "1.1.0-alpha-08",
   "description": "Asset compilation, static-site generator",
   "main": "lib/index.js",
   "bin": {
