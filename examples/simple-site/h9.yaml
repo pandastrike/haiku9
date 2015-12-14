@@ -1,5 +1,7 @@
 source: "www"
 target: "build"
+server:
+  port: 8080
 blog:
   page:
     size: 10
