@@ -3,11 +3,12 @@
 
 {createReadStream} = require "fs"
 {go, map, tee, reject,
-w, include, Type, isType, isMatch, Method,
+w, include, Type, isType, Method,
 glob} = require "fairmont"
 {define} = Method
 {task, context} = require "panda-9000"
 {save, render} = Asset = require "../asset"
+{pathWithUnderscore} = require "../utils"
 {source} = require "../configuration"
 
 formats = w ".jpg .png .webp .svg .gif .ico"
@@ -17,7 +18,7 @@ type = Type.define Asset
 task "survey/image", ->
   go [
     glob "**/*{#{formats.join ','}}", source
-    reject (path) -> isMatch /(^|\/)_/, path
+    reject pathWithUnderscore
     map context source
     tee ({source, target}) -> target.extension = source.extension
     map (context) -> include (Type.create type), context

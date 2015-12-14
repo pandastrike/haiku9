@@ -1,10 +1,11 @@
 marked = require "marked"
-{go, map, tee, async, include,
+{go, map, tee, reject, async, include,
 Type, isType, Method, glob, read} = require "fairmont"
 {define} = Method
 {task, context, jade} = require "panda-9000"
 {save, render} = Asset = require "../asset"
 Data = require "../data"
+{pathWithUnderscore} = require "../utils"
 {source} = require "../configuration"
 
 type = Type.define Asset
@@ -12,6 +13,7 @@ type = Type.define Asset
 task "survey/markdown", "data", ->
   go [
     glob "**/*.md", source
+    reject pathWithUnderscore
     map context source
     tee (context) -> Data.augment context
     tee ({target}) -> target.extension = ".html"

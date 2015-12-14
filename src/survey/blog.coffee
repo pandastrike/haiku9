@@ -1,12 +1,13 @@
 {join} = require "path"
 marked = require "marked"
-{reactor, pull, go, collect, partition, map, tee,
+{reactor, pull, go, collect, partition, map, tee, reject,
 async, include, Type, isType,
 read, glob,
 Method} = require "fairmont"
 {define} = Method
 {task, context, jade} = require "panda-9000"
 {find, save, render} = Asset = require "../asset"
+{pathWithUnderscore} = require "../utils"
 {source, blog} = require "../configuration"
 Data = require "../data"
 
@@ -25,6 +26,7 @@ type = Type.define Asset
 task "survey/posts", "survey/markdown", ->
   go [
     glob "posts/*.md", source
+    reject pathWithUnderscore
     map context source
     map ({path}) -> {path, extension: ".html"}
     map Asset.find

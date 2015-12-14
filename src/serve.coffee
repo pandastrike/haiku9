@@ -42,7 +42,7 @@ task "serve", "survey", ->
     tee async ({request, response}) ->
 
       try
-        {path, source} = context "/", request.url
+        {path, source} = context "/", request.url.split('?')[0]
         extension = if source.extension == ""
           ".html"
         else
@@ -53,7 +53,8 @@ task "serve", "survey", ->
           {target} = asset
           response.setHeader "content-type",  mime.lookup target.extension
           response.statusCode = 200
-          if isReadStream target.content
+          # if isReadStream target.content
+          if target.content.pipe?
             target.content.pipe response
           else
             response.end target.content
