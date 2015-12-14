@@ -1,0 +1,6 @@
+source: "www"
+target: "build"
+blog:
+  page:
+    size: 10
+    template: "_layouts/blog-summary.jade"
