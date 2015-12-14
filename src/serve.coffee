@@ -33,7 +33,7 @@ task "serve", "survey", ->
   server = http
   .createServer()
   .listen port,
-  -> console.log "Haiku9 HTTP server listening on port 1337."
+  -> console.log "Haiku9 HTTP server listening on port #{port}."
 
   go [
     events "request", server
