@@ -23,6 +23,7 @@
     "when": "^3.7.4"
   },
   "devDependencies": {
+    "amen": "^1.0.0-alpha-06",
     "json": "^9.0.3"
   },
   "scripts": {
