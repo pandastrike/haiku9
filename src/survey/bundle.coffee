@@ -16,6 +16,7 @@ type = Type.define Asset
 task "survey/bundle", ->
   go [
     glob "**/package.json", source
+    reject isMatch /node_modules/
     map context source
     tee ({target}) -> target.extension = ".js"
     map (context) -> include (Type.create type), context
