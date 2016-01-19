@@ -2,3 +2,5 @@ source: "www"
 target: "build"
 server:
   port: 8080
+s3:
+  bucket: david.pandastrike.com

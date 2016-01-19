@@ -9,9 +9,10 @@
     "h9-compile": "bin/h9-build"
   },
   "dependencies": {
+    "aws-sdk": "^2.2.26",
     "browserify": "^12.0.1",
-    "coffeeify": "^2.0.1",
     "chokidar": "^1.2.0",
+    "coffeeify": "^2.0.1",
     "commander": "^2.9.0",
     "express": "^4.13.3",
     "fairmont": "^1.0.0-beta-40",
