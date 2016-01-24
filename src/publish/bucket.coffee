@@ -2,8 +2,8 @@
 {join} = require "path"
 {call, async, read} = require "fairmont"
 
-config = (require "../configuration").s3
-{target} = require "../configuration"
+{target, s3} = require "../configuration"
+config = s3
 
 module.exports = call ->
 
@@ -38,7 +38,7 @@ module.exports = call ->
 
 
   # Establishes what objects already exist up in S3.
-  scanBucket: async ->
+  scan: async ->
     # Search your buckets to see if it exists.  If it doesn't, create it.
     try
       match = yield s3.headBucket Bucket: config.bucket
@@ -72,9 +72,7 @@ module.exports = call ->
 
 
   # Uploads / Deletes S3 objects as neccessary from the target bucket.
-  syncBucket: async (tasks) ->
-    {dlist, ulist} = yield tasks
-
+  sync: async ({dlist, ulist}) ->
     # Delete Files
     try
       for file in dlist

@@ -2,13 +2,12 @@
 {async, empty} = require "fairmont"
 {task} = require "panda-9000"
 
-{scanLocal, reconcile} = require "./hash"
-
 task "publish", async ->
-  s3 = yield require "./s3"
+  bucket = yield require "./bucket"
+  local = require "./local"
 
-  remoteFiles = yield s3.scanBucket()
-  localFiles = yield scanLocal()
+  remoteFiles = yield bucket.scan()
+  localFiles = yield local.scan()
 
-  tasks = reconcile localFiles, remoteFiles
-  yield s3.syncBucket tasks
+  actions = local.reconcile localFiles, remoteFiles
+  yield bucket.sync actions

@@ -9,7 +9,7 @@
 module.exports =
 
   # Produce a table of filenames and their md5 hashes.
-  scanLocal: async ->
+  scan: async ->
     table = {}
     paths = yield lsR target
     hashes = yield collect flow [
