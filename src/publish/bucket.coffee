@@ -1,6 +1,6 @@
 {createReadStream} = require "fs"
 {join} = require "path"
-{call, async, read} = require "fairmont"
+{call, async, read, last} = require "fairmont"
 
 {target, s3} = require "../configuration"
 config = s3
@@ -103,7 +103,7 @@ module.exports = call ->
       for file in ulist
         params =
           Bucket: config.bucket
-          Key: file
+          Key: file.split(".html")[0]   # Strip ".html" extension for S3 key. 
           Body: createReadStream join target, file
 
         yield s3.putObject params

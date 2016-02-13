@@ -20,7 +20,7 @@ module.exports =
     ]
 
     for i in [0...paths.length]
-      path = paths[i].split(target + "/")[1]
+      path = paths[i].split(target + "/")[1]   # Remove "target" path prefix
       table[path] = hashes[i]
     table
 
@@ -33,7 +33,10 @@ module.exports =
     # Ignore keys that signify a directory, instead of a flat data object.
     delete remote[k] for k, v of remote when k.match /.*\/$/
 
-    dlist.push k for k, v of remote when !local[k]
-    ulist.push k for k, v of local when !remote[k] || v != remote[k].hash
+    dlist.push k for k, v of remote when !local[k] && !local[k + ".html"]
+    
+    for k, v of local
+      obj = k.split(".html")[0]    # In S3, file is stripped of ".html" ext
+      ulist.push k if !remote[obj] || v != remote[obj].hash
 
     {dlist, ulist}
