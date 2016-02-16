@@ -26,11 +26,12 @@ aws_path = join homedir(), ".h9"
 
 module.exports = call ->
   config = safeLoad yield read aws_path
-  {id, key, region} = config.aws
+  repoConfig = require "./configuration"
+  {id, key} = config.aws
   AWS.config =
      accessKeyId: id
      secretAccessKey: key
-     region: region
+     region: repoConfig.s3.region
      sslEnabled: true
 
   # Module's we'd like to invoke from AWS are listed and lifted here.
