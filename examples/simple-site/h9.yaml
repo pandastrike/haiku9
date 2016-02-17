@@ -8,3 +8,5 @@ s3:
   web:
     index: index
     error: 404
+  cloudFront:
+    ssl: true

@@ -17,6 +17,7 @@
     "express": "^4.13.3",
     "fairmont": "^1.0.0-beta-40",
     "js-yaml": "^3.4.0",
+    "jsck": "^0.3.0",
     "marked": "^0.3.5",
     "mime": "^1.3.4",
     "mime-types": "^2.1.6",

@@ -1,0 +1,77 @@
+type: object
+additionalProperties: false
+required: [ source, target ]
+properties:
+  source:
+    description: Directory where h9 can find original assets.
+    type: string
+
+  target:
+    description: Directory where h9 places compiled assets.
+    type: string
+
+  server:
+    description: Configuration for h9 local Web server.
+    type: object
+    additionalProperties: false
+    required: [ port ]
+    properties:
+      port:
+        description: Port for h9 to run local Web server.
+        type: integer
+
+  s3:
+    description:
+      Configuration for h9 to coordinate the AWS deployment of static content.
+    type: object
+    additionalProperties: false
+    required: [ bucket, region, web ]
+    properties:
+      bucket:
+        description: Name of S3 bucket to create/update.
+        type: string
+
+      region:
+        description: Region of target S3 bucket. If the bucket already exists,
+          placing the wrong region will trigger a 301 error and prevent sync.
+        type: string
+        enum:
+          - us-east-1
+          - us-west-1
+          - us-west-2
+          - eu-west-1
+          - eu-central-1
+          - ap-southeast-1
+          - ap-northeast-1
+          - ap-southeast-2
+          - ap-northeast-2
+          - sa-east-1
+
+      web:
+        description: Configuration for S3 to handle static site serving.
+        type: object
+        additionalProperties: false
+        required: [ index, error ]
+        properties:
+          index:
+            description: Homepage for static site. Default page for site.
+            anyOf:
+              - type: string
+              - type: integer
+
+          error:
+            description: Page for S3 to display on error. Usually 404 errors.
+            anyOf:
+              - type: string
+              - type: integer
+
+      cloudFront:
+        description: Configuration for CloudFront to provide static serving
+          on AWS global CDN infrastructure, including support for SSL.
+        type: object
+        additionalProperties: false
+        required: [ ssl ]
+        properties:
+          ssl:
+            description: Sets whether CloudFront should use SSL when serving.
+            type: boolean

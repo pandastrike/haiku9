@@ -15,17 +15,17 @@ wlift = (require "when/node").lift
 lift = (object, k) ->
   if isFunction k then wlift k.bind object else k
 
-lift_module = (m) ->
+liftModule = (m) ->
   out = {}
   out[k] = lift m, v for k, v of m
   out
 
 # For now, this assumes AWS credentials are stored in a Yaml document at ~/.h9
 # TODO: Is this an okay way to handle this?
-aws_path = join homedir(), ".h9"
+awsPath = join homedir(), ".h9"
 
 module.exports = call ->
-  config = safeLoad yield read aws_path
+  config = safeLoad yield read awsPath
   repoConfig = require "./configuration"
   {id, key} = config.aws
   AWS.config =
@@ -35,7 +35,8 @@ module.exports = call ->
      sslEnabled: true
 
   # Module's we'd like to invoke from AWS are listed and lifted here.
-  route53 = lift_module new AWS.Route53()
-  s3 = lift_module new AWS.S3()
+  cf = liftModule new AWS.CloudFront()
+  route53 = liftModule new AWS.Route53()
+  s3 = liftModule new AWS.S3()
 
-  {route53, s3}
+  {cf, route53, s3}
