@@ -11,6 +11,7 @@ module.exports = (s3) ->
   {listObjects} = require("./helpers")(s3)
 
   async ({dlist, ulist}) ->
+    console.log "Syncing S3 bucket."
     # Delete Files
     try
       for file in dlist

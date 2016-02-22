@@ -10,6 +10,7 @@ module.exports =
 
   # Produce a table of filenames and their md5 hashes.
   scan: async ->
+    console.log "Scanning local repo."
     table = {}
     paths = yield lsR target
     hashes = yield collect flow [
@@ -34,7 +35,7 @@ module.exports =
     delete remote[k] for k, v of remote when k.match /.*\/$/
 
     dlist.push k for k, v of remote when !local[k] && !local[k + ".html"]
-    
+
     for k, v of local
       obj = k.split(".html")[0]    # In S3, file is stripped of ".html" ext
       ulist.push k if !remote[obj] || v != remote[obj].hash

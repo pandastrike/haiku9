@@ -66,12 +66,26 @@ properties:
               - type: integer
 
       cloudFront:
-        description: Configuration for CloudFront to provide static serving
-          on AWS global CDN infrastructure, including support for SSL.
+        description:
+          Configuration for CloudFront to provide static serving on AWS global
+          CDN infrastructure, including support for SSL.
         type: object
         additionalProperties: false
-        required: [ ssl ]
         properties:
           ssl:
             description: Sets whether CloudFront should use SSL when serving.
             type: boolean
+
+          priceClass:
+            description:
+              Sets the extent to which content is cached on CloudFronts edge
+              servers.  By limiting to edge servers in cheaper locations
+              throughout the world, you can lower your expenses at the cost of
+              less coverage.  Defaults to 100, which is cheapest.
+            anyOf:
+              - type: string
+                enum: [ "100", "200", "All"]
+              - type: integer
+                multipleOf: 100
+                minimum: 100
+                maximum: 200

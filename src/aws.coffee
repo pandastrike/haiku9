@@ -24,14 +24,14 @@ liftModule = (m) ->
 # TODO: Is this an okay way to handle this?
 awsPath = join homedir(), ".h9"
 
-module.exports = call ->
+module.exports = call (region) ->
   config = safeLoad yield read awsPath
   repoConfig = require "./configuration"
   {id, key} = config.aws
   AWS.config =
      accessKeyId: id
      secretAccessKey: key
-     region: repoConfig.s3.region
+     region: region || repoConfig.s3.region
      sslEnabled: true
 
   # Module's we'd like to invoke from AWS are listed and lifted here.

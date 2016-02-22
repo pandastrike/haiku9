@@ -7,6 +7,7 @@ module.exports = (s3) ->
 
   # Sets the S3 bucket's static site configuration.
   enable: async ->
+    console.log "Configuring S3 bucket for static serving."
     params =
       Bucket: config.s3.bucket
       WebsiteConfiguration:

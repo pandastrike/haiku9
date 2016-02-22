@@ -3,10 +3,11 @@ target: "build"
 server:
   port: 8080
 s3:
-  bucket: david.pandastrike.com
+  bucket: david2.pandastrike.com
   region: us-west-2
   web:
     index: index
     error: 404
   cloudFront:
-    ssl: true
+    ssl: false
+    priceClass: 100
