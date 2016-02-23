@@ -44,7 +44,13 @@ module.exports = (route53, distribution) ->
       zone = root config.s3.bucket
       zones = yield route53.listHostedZones {}
       result = collect where {Name: zone}, zones.HostedZones
-      if empty result then return null else id = result[0].Id
+      if empty result
+        console.error("It appears you do not have a public hostedzone setup " +
+          "for #{root config.s3.bucket}  Without it, H9 cannot setup the DNS " +
+          "records to route traffic to your bucket.  Aborting.")
+        throw new Error()
+
+      id = result[0].Id
 
       # Scan this hosted zone and build the neccessary DNS changes for Route53
       data = yield route53.listResourceRecordSets HostedZoneId: id
