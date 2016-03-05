@@ -12,6 +12,7 @@ task "publish", async ->
   localFiles = yield local.scan()
 
   actions = local.reconcile localFiles, remoteFiles
+  console.log {actions}
   yield bucket.sync actions
 
   yield bucket.web.enable()

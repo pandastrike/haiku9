@@ -20,6 +20,25 @@ properties:
         description: Port for h9 to run local Web server.
         type: integer
 
+  blog:
+    description: Describe blog-specific configuration.
+    type: object
+    additionalProperties: false
+    required: [ page ]
+    properties:
+      page:
+        description: Describe blog pagaination.
+        type: object
+        additionalProperties: false
+        required: [ size, template ]
+        properties:
+          size:
+            description: Pagination page size
+            type: integer
+          template:
+            description: Pagination template
+            type: string
+
   s3:
     description:
       Configuration for h9 to coordinate the AWS deployment of static content.
