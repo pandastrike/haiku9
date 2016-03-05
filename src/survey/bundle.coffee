@@ -29,9 +29,11 @@ task "survey/bundle", ->
 
 define render, (isType type), async (asset) ->
   manifest = browserify()
+
   manifest.transform coffeeify,
     bare: false
     header: true
+
   yield go [
     yield glob "*.coffee", asset.source.directory
     map (path) -> manifest.add path
@@ -40,6 +42,9 @@ define render, (isType type), async (asset) ->
     yield glob "*.js", asset.source.directory
     map (path) -> manifest.add path
   ]
+
   # wrap Browserify's untyped stream in a ReadableStream
   {PassThrough} = require "stream"
-  manifest.bundle().pipe (asset.target.content = new PassThrough)
+  manifest.bundle()
+  .on "error", (error) -> console.error error
+  .pipe (asset.target.content = new PassThrough)
