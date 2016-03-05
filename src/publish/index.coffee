@@ -18,8 +18,8 @@ task "publish", async ->
 
   # If the user requests a CloudFront CDN distribution,
   if config.s3.cloudFront
-    distribution = yield bucket.cf.set()
-    yield bucket.cf.sync distribution, actions
+    distributions = yield bucket.cf.set()
+    yield bucket.cf.sync distributions, actions
 
-  changeID = yield bucket.dns.set distribution
+  changeID = yield bucket.dns.set distributions
   yield bucket.dns.sync changeID

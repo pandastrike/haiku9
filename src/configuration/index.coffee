@@ -20,9 +20,4 @@ module.exports = do ->
     console.error errors
     throw new Error()
 
-  # TODO: Remove this when we actually start supporting SSL.
-  if config.s3.cloudFront?.ssl
-    console.error "SSL setup is not currently supported. Exiting."
-    process.exit()
-
   config

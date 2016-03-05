@@ -2,9 +2,9 @@
 
 module.exports = call ->
 
-  {cf, route53, s3} = yield require "../../aws"
+  {cf, route53, s3} = yield require("../../aws")()
 
-  cf: require("./cloudfront")(cf)
+  cf: yield require("./cloudfront")(cf)
   dns: require("./dns")(route53)
   scan: require("./scan")(s3)
   sync: require("./sync")(s3)

@@ -6,7 +6,7 @@ AWS = require "aws-sdk"
 {safeLoad} = require "js-yaml"
 wlift = (require "when/node").lift
 
-{call, read, isFunction} = require "fairmont"
+{async, read, isFunction} = require "fairmont"
 {task} = require "panda-9000"
 
 # aws-sdk is a little odd.  We must instantiate a given service's sub-library
@@ -24,7 +24,7 @@ liftModule = (m) ->
 # TODO: Is this an okay way to handle this?
 awsPath = join homedir(), ".h9"
 
-module.exports = call (region) ->
+module.exports = async (region) ->
   config = safeLoad yield read awsPath
   repoConfig = require "./configuration"
   {id, key} = config.aws
@@ -35,8 +35,9 @@ module.exports = call (region) ->
      sslEnabled: true
 
   # Module's we'd like to invoke from AWS are listed and lifted here.
+  acm = liftModule new AWS.ACM()
   cf = liftModule new AWS.CloudFront()
   route53 = liftModule new AWS.Route53()
   s3 = liftModule new AWS.S3()
 
-  {cf, route53, s3}
+  {acm, cf, route53, s3}
