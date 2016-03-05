@@ -5,13 +5,15 @@ config = require "../../../configuration"
 # Handles setting up DNS records to assign the desired hostname to the bucket.
 module.exports = (route53) ->
 
-  set: async (distribution) ->
+  dns = require("./dns")(route53)
+
+  set: async (distributions) ->
     console.log "Establishing DNS record for site."
-    console.log "Direct S3 Serving.  HTTP-Only." if !distribution
-    params = yield do require("./setup")(route53, distribution)
+    console.log "Direct S3 Serving.  HTTP-Only." if !distributions
+    params = yield dns.build distributions
 
     try
-      return null if !params
+      return false if !params
       data = yield route53.changeResourceRecordSets params
       data.ChangeInfo.Id
     catch e

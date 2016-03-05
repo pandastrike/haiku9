@@ -25,11 +25,19 @@ properties:
       Configuration for h9 to coordinate the AWS deployment of static content.
     type: object
     additionalProperties: false
-    required: [ bucket, region, web ]
+    required: [ hostnames, region, web ]
     properties:
-      bucket:
-        description: Name of S3 bucket to create/update.
-        type: string
+      hostnames:
+        description:
+          List of names for S3 buckets to create/update.  This is an array where
+          the first name is the primary hostname and all secondary ones will
+          be routed to it.
+        type: array
+        minItems: 1
+        uniqueItems: true
+        items:
+          type: string
+
 
       region:
         description: Region of target S3 bucket. If the bucket already exists,
