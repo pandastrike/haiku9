@@ -39,12 +39,13 @@ module.exports = (s3) ->
 
     # Upload Files
     try
-      for file in ulist
+      for {file, hash} in ulist
         params =
           Bucket: config.s3.hostnames[0]
           Key: file.split(".html")[0]   # Strip ".html" extension for S3 key.
           ACL: "public-read"
           ContentType: mime.lookup file
+          ContentMD5: new Buffer(hash, "hex").toString('base64')
           Body: createReadStream join config.target, file
 
         yield s3.putObject params

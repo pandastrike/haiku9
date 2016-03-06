@@ -2,6 +2,7 @@
 # file. We can then reference that hash to determine if data stored in an S3
 # object needs to be updated.
 
+mime = require "mime"
 {async, lsR, collect, flow, map, pull, read, md5} = require "fairmont"
 
 {target} = require "../configuration"
@@ -15,7 +16,11 @@ module.exports =
     paths = yield lsR target
     hashes = yield collect flow [
       paths
-      map (pathname) -> read pathname
+      map (pathname) ->
+        if "text" in mime.lookup(pathname)
+          read pathname
+        else
+          read pathname, "buffer"
       pull
       map (content) -> md5 content
     ]
@@ -38,6 +43,6 @@ module.exports =
 
     for k, v of local
       obj = k.split(".html")[0]    # In S3, file is stripped of ".html" ext
-      ulist.push k if !remote[obj] || v != remote[obj].hash
+      ulist.push {file: k, hash: v} if !remote[obj] || v != remote[obj].hash
 
     {dlist, ulist}
