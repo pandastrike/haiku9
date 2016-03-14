@@ -2,7 +2,7 @@
 
 options = require "commander"
 require "../src"
-{task} = require "panda-9000"
+{run} = require "panda-9000"
 
 # {source, target, watch} = options
 #   .version "1.0.0-alpha-01"
@@ -19,4 +19,4 @@ require "../src"
 options
 .parse process.argv
 
-task "build"
+run "build"

@@ -1,6 +1,6 @@
 {go, map, tee, reject, include, Type, isType, Method, glob} = require "fairmont"
-{define} = Method
-{task, context, coffee} = require "panda-9000"
+
+{define, context, coffee} = require "panda-9000"
 {save, render} = Asset = require "../asset"
 {pathWithUnderscore} = require "../utils"
 {source} = require "../configuration"
@@ -8,7 +8,7 @@ Data = require "../data"
 
 type = Type.define Asset
 
-task "survey/coffee", ->
+define "survey/coffee", ->
   go [
     glob "**/*.coffee", source
     reject pathWithUnderscore
@@ -19,4 +19,4 @@ task "survey/coffee", ->
     tee save
   ]
 
-define render, (isType type), coffee
+Method.define render, (isType type), coffee

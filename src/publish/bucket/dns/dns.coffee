@@ -4,10 +4,9 @@
 {async, last, first, rest, collect, where, empty,
 deepEqual } = require "fairmont"
 
-config = require "../../../configuration"
-module.exports = (route53) ->
+module.exports = (config, route53) ->
 
-  {bucketURL, fullyQualify, regularlyQualify, root} = require "../url"
+  {bucketURL, fullyQualify, regularlyQualify, root} = require("../url")(config)
 
 
   # Prepare a set of DNS changes that Route53 uses to present the bucket or
@@ -28,7 +27,7 @@ module.exports = (route53) ->
       if distributions
         HostedZoneId = "Z2FDTNDATAQYW2"
       else
-        HostedZoneId = require("./s3-hostedzone-ids")[config.s3.region]
+        HostedZoneId = require("./s3-hostedzone-ids")[config.aws.region]
 
       Action: "CREATE",
       ResourceRecordSet:
@@ -41,12 +40,12 @@ module.exports = (route53) ->
 
     # Determine if the AWS user owns the requested URL as a public hosted zone
     getHostedZoneID = async ->
-      zone = root config.s3.hostnames[0]
+      zone = root config.aws.hostnames[0]
       zones = yield route53.listHostedZones {}
       result = collect where {Name: zone}, zones.HostedZones
       if empty result
         console.error("It appears you do not have a public hostedzone setup " +
-          "for #{root config.s3.bucket}  Without it, H9 cannot setup the DNS " +
+          "for #{root config.aws.hostnames[0]}  Without it, H9 cannot setup the DNS " +
           "records to route traffic to your bucket.  Aborting.")
         throw new Error()
 
@@ -79,7 +78,7 @@ module.exports = (route53) ->
       hostnames = []
       sources = []
 
-      hostnames.push fullyQualify name for name in config.s3.hostnames
+      hostnames.push fullyQualify name for name in config.aws.hostnames
 
       if distributions
         sources.push distro.DomainName for distro in distributions
@@ -89,6 +88,7 @@ module.exports = (route53) ->
       for i in [0...hostnames.length]
         reconcile records, hostnames[i], sources[i]
 
+      # changeList is declared above. The goal is to build a list with reconcile
       # If there are changes, return the configuration object for the AWS call.
       if empty changeList
         false

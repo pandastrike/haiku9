@@ -5,7 +5,7 @@ mime = require "mime-types"
 {async, isReadStream,
 spread,
 events, go, map, tee} = require "fairmont"
-{task, context} = require "panda-9000"
+{define, run, context} = require "panda-9000"
 {find, render} = require "./asset"
 {source, server} = require "./configuration"
 
@@ -17,13 +17,13 @@ httpLogger = ({request, response}) ->
     code = response.statusCode
     console.log "#{method} #{url} - #{code} (#{duration}ms)"
 
-task "serve", "survey", ->
+define "serve", ["survey"], ->
 
   watcher = require "chokidar"
 
   # re-run the survey when things change
   watcher.watch source, ignoreInitial: true
-  .on "all", (event) -> task "survey"
+  .on "all", (event) -> run "survey"
 
 
   http = require "http"

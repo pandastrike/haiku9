@@ -1,8 +1,7 @@
 # Helper functions to assist with url manipulation for AWS calls.
 {last} = require "fairmont"
-config = require "../../configuration"
 
-module.exports = do ->
+module.exports = (config) ->
   # Enforces "fully qualified" form of hostnames and domains.  Idompotent.
   fullyQualify = (name) -> if last(name) == "." then name else name + "."
 
@@ -35,6 +34,6 @@ module.exports = do ->
   # We construct the region-specific endpoint. AWS docs make a vague reference
   # to its ability to "reduce data latency", but it's not clear how many ms
   # we are saving in the response time.
-  bucketURL = -> "s3-website-" + config.s3.region + ".amazonaws.com."
+  bucketURL = -> "s3-website-" + config.aws.region + ".amazonaws.com."
 
   {bucketURL, fullyQualify, regularlyQualify, root}

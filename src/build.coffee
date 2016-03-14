@@ -1,12 +1,12 @@
 {go, tee, pull, values, async} = require "fairmont"
-{task, write} = require "panda-9000"
+{define, write} = require "panda-9000"
 {lift} = require "when/node"
 rmrf = lift require "rimraf"
 
 {render} = Asset = require "./asset"
 {source, target} = require "./configuration"
 
-task "build", "survey", async ->
+define "build", ["survey"], async ->
 
   yield rmrf target
 

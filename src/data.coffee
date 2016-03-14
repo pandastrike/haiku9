@@ -1,6 +1,6 @@
 {sep} = require "path"
 {curry, go, map, tee, async, include, read, glob} = require "fairmont"
-{task, context} = require "panda-9000"
+{define, context} = require "panda-9000"
 yaml = require "js-yaml"
 loadYAML = async (path) -> yaml.safeLoad yield read path
 {source} = require "./configuration"
@@ -30,7 +30,7 @@ Data =
     asset.data.path = asset.path
     include asset.data, Data.root, Data.get asset.path
 
-task "data", async ->
+define "data", async ->
   yield go [
     glob "**/*.yaml", source
     map context source

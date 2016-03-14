@@ -3,18 +3,18 @@
 config = require "../../configuration"
 
 
-module.exports = (s3) ->
+module.exports = (config, s3) ->
 
   # Sets the S3 bucket's static site configuration.
   enable: async ->
     console.log "Configuring S3 bucket for static serving."
     params =
-      Bucket: config.s3.hostnames[0]
+      Bucket: config.aws.hostnames[0]
       WebsiteConfiguration:
         ErrorDocument:
-          Key: config.s3.web.error.toString()
+          Key: config.aws.site.error.toString()
         IndexDocument:
-          Suffix: config.s3.web.index.toString()
+          Suffix: config.aws.site.index.toString()
 
     try
       yield s3.putBucketWebsite params
@@ -23,13 +23,13 @@ module.exports = (s3) ->
       throw new Error()
 
 
-    for name in rest config.s3.hostnames
+    for name in rest config.aws.hostnames
       params =
         Bucket: name
         WebsiteConfiguration:
           RedirectAllRequestsTo:
-            HostName: config.s3.hostnames[0]
-            Protocol: if config.s3.cloudFront?.ssl then "https" else "http"
+            HostName: config.aws.hostnames[0]
+            Protocol: if config.aws.cache?.ssl then "https" else "http"
 
       try
         yield s3.putBucketWebsite params

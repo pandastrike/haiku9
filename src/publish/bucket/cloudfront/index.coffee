@@ -1,20 +1,18 @@
 {async, sleep, isArray} = require "fairmont"
 
-config = require "../../../configuration"
-
 # Handles setting up and maintaining CloudFront distributions.
-module.exports = async (cf) ->
+module.exports = async (config, cf) ->
 
-    cf = yield require("./distribution")(cf)
+    cf = yield require("./distribution")(config, cf)
 
     # Locate a CloudFront distribution that matches our needs or create it.
     set: async ->
-      if config.s3.cloudFront.ssl
+      if config.aws.cache.ssl
         console.log "CloudFront CDN. HTTPS with redirect."
       else
         console.log "CloudFront CDN. HTTP-Only."
 
-      yield cf.set name for name in config.s3.hostnames
+      yield cf.set name for name in config.aws.hostnames
 
 
     # Wait until we're sure everything is ready on the edge servers.  For new

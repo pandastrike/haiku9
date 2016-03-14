@@ -31,7 +31,7 @@ module.exports = async (region) ->
   AWS.config =
      accessKeyId: id
      secretAccessKey: key
-     region: region || repoConfig.s3.region
+     region: region || repoConfig.aws.region
      sslEnabled: true
 
   # Module's we'd like to invoke from AWS are listed and lifted here.

@@ -3,7 +3,7 @@
 process.chdir join __dirname, "..", "examples", "simple-site"
 require "../src/index"
 
-{task} = require "panda-9000"
+{run} = require "panda-9000"
 assert = require "assert"
 {shell, sleep, call, exists} = require "fairmont"
 Amen = require "amen"
@@ -12,7 +12,7 @@ Amen.describe "Haiku9 static-site generation", (context) ->
 
   context.test "Run the build task", ->
     yield shell "rm -rf build"
-    yield task "build"
+    yield run "build"
     yield sleep 1000
     assert yield exists "build"
 

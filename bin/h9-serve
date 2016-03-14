@@ -1,5 +1,5 @@
 #!/usr/bin/env coffee
 
 require "../src"
-{task} = require "panda-9000"
-task "serve"
+{run} = require "panda-9000"
+run "serve"
