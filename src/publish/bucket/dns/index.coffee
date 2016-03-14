@@ -3,9 +3,9 @@
 config = require "../../../configuration"
 
 # Handles setting up DNS records to assign the desired hostname to the bucket.
-module.exports = (route53) ->
+module.exports = (config, route53) ->
 
-  dns = require("./dns")(route53)
+  dns = require("./dns")(config, route53)
 
   set: async (distributions) ->
     console.log "Establishing DNS record for site."

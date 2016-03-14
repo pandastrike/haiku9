@@ -1,13 +1,14 @@
 {async, collect, where, empty, cat, sleep} = require "fairmont"
 {randomKey} = require "key-forge"
 
-config = require "../../../configuration"
-
 # TODO add configuration for cloudfront restrictions.
-module.exports = async (cf) ->
+module.exports = async (config, cf) ->
 
-  {bucketURL, fullyQualify, regularlyQualify, root} = require "../url"
-  acm = require("./acm")((yield require("../../../aws")("us-east-1")).acm)
+  {bucketURL, fullyQualify, regularlyQualify, root} = require("../url")(config)
+  acm = require("./acm")(
+    config,
+    (yield require("../../../aws")("us-east-1")).acm
+  )
 
   # Invalidate distribution cache.  Because we are charged per path we specify,
   # it's cheapest to just invalidate everything unless nothing changed.
@@ -31,10 +32,10 @@ module.exports = async (cf) ->
 
   set = async (name) ->
     buildSource = (name) ->
-      name + ".s3-website-" + config.s3.region + ".amazonaws.com"
+      name + ".s3-website-" + config.aws.region + ".amazonaws.com"
 
     buildConfiguration = async (name) ->
-      {ssl, priceClass} = config.s3.cloudFront
+      {ssl, priceClass} = config.aws.cache
       protocolPolicy = if ssl then "redirect-to-https" else "allow-all"
       priceClass ||= "100"
       originID = "Haiku9-" + regularlyQualify name
@@ -46,7 +47,7 @@ module.exports = async (cf) ->
           Comment: "Origin is S3 bucket. Setup by Haiku9."
           Enabled: true
           PriceClass: "PriceClass_" + priceClass
-          DefaultRootObject: config.s3.web.index
+          DefaultRootObject: ""
 
           Aliases:
             Quantity: 1
@@ -71,7 +72,8 @@ module.exports = async (cf) ->
                 Forward: "none"
               Headers:
                 Quantity: 0
-            MinTTL: 86400
+            MinTTL: 0
+            MaxTTL: config.aws.cache.expires || 60
             TrustedSigners:
               Enabled: false
               Quantity: 0
@@ -88,7 +90,7 @@ module.exports = async (cf) ->
         params.DistributionConfig.ViewerCertificate =
           MinimumProtocolVersion: "TLSv1"
           SSLSupportMethod: "sni-only"
-          ACMCertificateArn: yield acm.fetch config.s3.hostnames[0]
+          ACMCertificateArn: yield acm.fetch config.aws.hostnames[0]
 
       return params
 
@@ -105,18 +107,57 @@ module.exports = async (cf) ->
         throw new Error()
 
     updateDistribution = async (name, id, tag) ->
-      try
-        params = {Id: id, IfMatch: tag}
-        yield cf.deleteDistribution params
+      console.error "A CloudFront distribution using an S3 bucket with this " +
+        "name has been detected.  Currently, Haiku9 cannot update the " +
+        "distribution through the API. Please delete the distribution before " +
+        "trying again.  Aborting."
 
-        params = yield buildConfiguration name
-        distribution = yield cf.updateDistribution params
-        distribution.isNew = true
-        distribution
+      process.exit()
+
+      # TODO: Have this API endpoint work properly.
+      # try
+      #   params = {Id: id, IfMatch: tag}
+      #   yield cf.deleteDistribution params
+      #
+      #   params = yield buildConfiguration name
+      #   distribution = yield cf.updateDistribution params
+      #   distribution.isNew = true
+      #   distribution
+      # catch e
+      #   console.error "Unexpected response while updating CloudFront" +
+      #     "distribution.", e
+      #   throw new Error()
+
+    confirmDistributionConfig = async (match, ssl, name, id, tag) ->
+      try
+        priceClass = "PriceClass_" + (config.aws.cache.priceClass || "100")
+        ttl = config.aws.cache.expires || 60
+        cert = yield acm.fetch config.aws.hostnames[0]
+        _priceClass = match.PriceClass
+        _ttl = match.DefaultCacheBehavior.MaxTTL
+        _cert = match.ViewerCertificate?.ACMCertificateArn
+
+        step1 = ->
+          if priceClass == _priceClass && ttl == _ttl
+            true
+          else
+            false
+
+        step2 = ->
+          if ssl
+            if cert == _cert then true else false
+          else
+            match.ViewerCertificate.CloudFrontDefaultCertificate
+
+        if step1() && step2()
+          match
+        else
+          updateDistribution name, id, tag
       catch e
-        console.error "Unexpected response while updating CloudFront" +
-          "distribution.", e
-        throw new Error()
+        console.error e
+        process.exit()
+
+
 
 
 
@@ -124,7 +165,7 @@ module.exports = async (cf) ->
       # Search the user's current distributions for ones that matches our needs.
       # If we don't find one, create it. If it's misconfigured, update it.
       list = (yield cf.listDistributions {}).DistributionList.Items
-      ssl = config.s3.cloudFront.ssl
+      ssl = config.aws.cache.ssl
 
       pattern =
         Aliases:
@@ -137,26 +178,13 @@ module.exports = async (cf) ->
       return createDistribution name if empty matches
 
       # If the distribution does exist, get its ID and current version ETag.
-      id = matches[0].Id
+      match = matches[0]
+      id = match.Id
       tag = (yield cf.getDistribution {Id: id}).ETag
 
-      # Confirm that the distribution is correctly configured.
-      if !ssl
-        if matches[0].ViewerCertificate
-          updateDistribution name, id, tag
-        else
-          matches[0]
-      else
-        pattern.ViewerCertificate =
-          MinimumProtocolVersion: "TLSv1"
-          SSLSupportMethod: "sni-only"
-          ACMCertificateArn: yield acm.fetch config.s3.hostnames[0]
-
-        matches = collect where pattern, list
-        if empty matches
-          updateDistribution name, id, tag
-        else
-          matches[0]
+      # Confirm that the distribution is correctly configured. Return it
+      # if true, update it if false and return the new object
+      yield confirmDistributionConfig match, ssl, name, id, tag
 
     catch e
       console.error "Unexpected response while prepping CloudFront distro", e

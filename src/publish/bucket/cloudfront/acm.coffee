@@ -1,8 +1,7 @@
 {async, collect, where, empty} = require "fairmont"
 
-{root, regularlyQualify} = require "../url"
-
-module.exports = (acm) ->
+module.exports = (config, acm) ->
+  {root, regularlyQualify} = require("../url")(config)
 
   fetch = async (name) ->
     wild = (name) -> regularlyQualify "*." + root name

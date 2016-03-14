@@ -4,8 +4,8 @@ marked = require "marked"
 async, include, Type, isType,
 read, glob,
 Method} = require "fairmont"
-{define} = Method
-{task, context, jade} = require "panda-9000"
+
+{define, context, jade} = require "panda-9000"
 {find, save, render} = Asset = require "../asset"
 {pathWithUnderscore} = require "../utils"
 {source, blog} = require "../configuration"
@@ -23,7 +23,7 @@ reverse = (r) ->
 
 type = Type.define Asset
 
-task "survey/posts", "survey/markdown", ->
+define "survey/posts", ["survey/markdown"], ->
   if blog?
     go [
       glob "posts/*.md", source
@@ -63,7 +63,7 @@ task "survey/posts", "survey/markdown", ->
       tee save
     ]
 
-define render, (isType type), async (asset) ->
+Method.define render, (isType type), async (asset) ->
   for item in asset.data.items
     markdown = (yield read item.source.path).split( "<!-- more -->")[0]
     item.excerpt = marked markdown

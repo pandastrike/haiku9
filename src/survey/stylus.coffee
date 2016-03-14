@@ -2,15 +2,15 @@
 include, Type, isType, isMatch,
 Method,
 glob} = require "fairmont"
-{define} = Method
-{task, context, stylus} = require "panda-9000"
+
+{define, context, stylus} = require "panda-9000"
 {save, render} = Asset = require "../asset"
 {pathWithUnderscore} = require "../utils"
 {source} = require "../configuration"
 
 type = Type.define Asset
 
-task "survey/stylus", ->
+define "survey/stylus", ->
   go [
     glob "**/*.styl", source
     reject pathWithUnderscore
@@ -20,4 +20,4 @@ task "survey/stylus", ->
     tee save
   ]
 
-define render, (isType type), stylus
+Method.define render, (isType type), stylus

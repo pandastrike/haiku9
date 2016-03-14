@@ -2,8 +2,8 @@
 include, Type, isType, isMatch,
 Method,
 glob} = require "fairmont"
-{define} = Method
-{task, context, jade} = require "panda-9000"
+
+{define, context, jade} = require "panda-9000"
 {save, render} = Asset = require "../asset"
 Data = require "../data"
 {pathWithUnderscore} = require "../utils"
@@ -11,7 +11,7 @@ Data = require "../data"
 
 type = Type.define Asset
 
-task "survey/jade", "data", ->
+define "survey/jade", ["data"], ->
   go [
     glob "**/*.jade", source
     reject pathWithUnderscore
@@ -22,4 +22,4 @@ task "survey/jade", "data", ->
     tee save
   ]
 
-define render, (isType type), jade
+Method.define render, (isType type), jade

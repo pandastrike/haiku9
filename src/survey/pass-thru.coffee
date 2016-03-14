@@ -2,8 +2,8 @@
 {go, map, tee, reject,
 w, include, Type, isType, isMatch, Method,
 glob} = require "fairmont"
-{define} = Method
-{task, context} = require "panda-9000"
+
+{define, context} = require "panda-9000"
 {save, render} = Asset = require "../asset"
 {pathWithUnderscore} = require "../utils"
 {source} = require "../configuration"
@@ -12,7 +12,7 @@ formats = w ".html .css .js .woff .ttf"
 
 type = Type.define Asset
 
-task "survey/pass-thru", ->
+define "survey/pass-thru", ->
   go [
     glob "**/*{#{formats.join ','}}", source
     reject pathWithUnderscore
@@ -22,5 +22,5 @@ task "survey/pass-thru", ->
     tee save
   ]
 
-define render, (isType type), ({source, target}) ->
+Method.define render, (isType type), ({source, target}) ->
   target.content = createReadStream source.path

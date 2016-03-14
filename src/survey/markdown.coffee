@@ -1,8 +1,8 @@
 marked = require "marked"
 {go, map, tee, reject, async, include,
 Type, isType, Method, glob, read} = require "fairmont"
-{define} = Method
-{task, context, jade} = require "panda-9000"
+
+{define, context, jade} = require "panda-9000"
 {save, render} = Asset = require "../asset"
 Data = require "../data"
 {pathWithUnderscore} = require "../utils"
@@ -10,7 +10,7 @@ Data = require "../data"
 
 type = Type.define Asset
 
-task "survey/markdown", "data", ->
+define "survey/markdown", ["data"], ->
   go [
     glob "**/*.md", source
     reject pathWithUnderscore
@@ -21,7 +21,7 @@ task "survey/markdown", "data", ->
     tee save
   ]
 
-define render, (isType type), async (asset) ->
+Method.define render, (isType type), async (asset) ->
   do (source) ->
     {source} = asset
     markdown = (yield read source.path)

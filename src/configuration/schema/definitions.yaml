@@ -1,0 +1,76 @@
+environment:
+  description:
+    A collection of S3 buckets, DNS records, and optionally CloudFront
+    distributions that are allocated on your behalf to deploy the static site.
+  type: object
+  additionalProperties: false
+  required: [ title, hostnames ]
+  properties:
+    title:
+      description:
+        Name of the environment.  Use "h9 publish <title>" to invoke this
+        configuration for the publish process.
+      type: string
+      minLength: 1
+
+    hostnames:
+      description:
+        Name or names under which H9 creates subdomains and publishes your
+        site.  This field accepts either a single name or an array.  When an
+        array is provided, the first name is the primary hostname and all
+        secondary ones will be routed to it.  For each hostname, separate S3
+        buckets, DNS records, and (optinally) CloudFront distros are created.
+        Example "www" will produce "www.example.com"
+      anyOf:
+        - type: string
+          minLength: 1
+        - type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            type: string
+
+    root:
+      description:
+        In addition to the hostnames property, this optional flag will add
+        the root domain to the list of hostnames.  The root is always treated
+        as a secondary hostname, and will be routed to the primary one
+        specified in the "hostnames" field.
+        Example "example.com" to "www.example.com"
+      type: boolean
+
+
+    cache:
+      description:
+        Optional configuration for CloudFront to provide caching on the AWS
+        global CDN infrastructure, including support for SSL.
+      type: object
+      additionalProperties: false
+      properties:
+        ssl:
+          description: Sets whether CloudFront should use SSL when serving.
+          type: boolean
+
+        expires:
+          description:
+            The maximum amount of time, in seconds, that an object stays
+            cached in the edge server before additional requests are forwarded
+            to the S3 bucket to check for updates.
+          type: integer
+          minimum: 0
+          maximum: 3153600000
+
+        priceClass:
+          description:
+            Sets the extent to which content is cached on CloudFronts edge
+            servers.  By limiting to edge servers in cheaper locations
+            throughout the world, you can lower your expenses at the cost of
+            less coverage.  Defaults to 100, which is cheapest.
+          anyOf:
+            - type: string
+              enum: [ "100", "200", "All"]
+            - type: integer
+              multipleOf: 100
+              minimum: 100
+              maximum: 200
+  

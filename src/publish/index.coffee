@@ -1,11 +1,11 @@
 # Publish pushes the site to the AWS cloud platform.
 {async, empty} = require "fairmont"
-{task} = require "panda-9000"
+{define} = require "panda-9000"
 
-config = require "../configuration"
+define "publish", async (env) ->
+  config = require("../configuration/publish")(env)
 
-task "publish", async ->
-  bucket = yield require "./bucket"
+  bucket = yield require("./bucket")(config)
   local = require "./local"
 
   remoteFiles = yield bucket.scan()
@@ -17,7 +17,7 @@ task "publish", async ->
   yield bucket.web.enable()
 
   # If the user requests a CloudFront CDN distribution,
-  if config.s3.cloudFront
+  if config.aws.cache
     distributions = yield bucket.cf.set()
     yield bucket.cf.sync distributions, actions
 

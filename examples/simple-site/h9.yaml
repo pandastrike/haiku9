@@ -2,14 +2,37 @@ source: "www"
 target: "build"
 server:
   port: 8080
-s3:
-  hostnames:
-    - david.pandastrike.com
-    - david-beta.pandastrike.com
+aws:
+  domain: pandastrike.com
   region: us-west-2
-  web:
+  site:
     index: index
     error: 404
-  cloudFront:
-    ssl: true
-    priceClass: 100
+
+  environments:
+    - title: staging
+      hostnames:
+        - david-staging
+        - david-beta-staging
+      # cache:
+      #   expires: 60 # 1 minute
+      #   ssl: false
+      #   priceClass: 100
+
+    - title: production
+      hostnames:
+        - david
+        - david-beta
+      cache:
+        expires: 1800 # 30 minutes
+        ssl: true
+        priceClass: 100
+
+    - title: nonSSL
+      hostnames:
+        - david2
+        - david2-beta
+      cache:
+        expires: 1800 # 30 minutes
+        ssl: false
+        priceClass: 100

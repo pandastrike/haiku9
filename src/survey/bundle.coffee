@@ -4,8 +4,8 @@
 include, Type, isType, isMatch, async,
 Method,
 glob, read} = require "fairmont"
-{define} = Method
-{task, context} = require "panda-9000"
+
+{define, context} = require "panda-9000"
 browserify = require "browserify"
 coffeeify = require "coffeeify"
 {save, render} = Asset = require "../asset"
@@ -13,7 +13,7 @@ coffeeify = require "coffeeify"
 
 type = Type.define Asset
 
-task "survey/bundle", ->
+define "survey/bundle", ->
   go [
     glob "**/package.json", source
     reject isMatch /node_modules/
@@ -27,7 +27,7 @@ task "survey/bundle", ->
     tee save
   ]
 
-define render, (isType type), async (asset) ->
+Method.define render, (isType type), async (asset) ->
   manifest = browserify()
 
   manifest.transform coffeeify,
