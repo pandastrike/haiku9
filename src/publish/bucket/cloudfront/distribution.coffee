@@ -1,4 +1,6 @@
-{async, collect, where, empty, cat, sleep} = require "fairmont"
+{async, sleep,
+collect, where, empty, cat,
+clone, deepEqual} = require "fairmont"
 {randomKey} = require "key-forge"
 
 # TODO add configuration for cloudfront restrictions.
@@ -34,6 +36,20 @@ module.exports = async (config, cf) ->
     buildSource = (name) ->
       name + ".s3-website-" + config.aws.region + ".amazonaws.com"
 
+    setViewerCertificate = async ->
+      if config.aws.cache.ssl
+        cert = yield acm.fetch config.aws.hostnames[0]
+
+        ACMCertificateArn: cert
+        SSLSupportMethod: 'sni-only'
+        MinimumProtocolVersion: 'TLSv1'
+        Certificate: cert
+        CertificateSource: 'acm'
+      else
+        CloudFrontDefaultCertificate: true
+        MinimumProtocolVersion: 'SSLv3'
+        CertificateSource: 'cloudfront'
+
     buildConfiguration = async (name) ->
       {ssl, priceClass} = config.aws.cache
       protocolPolicy = if ssl then "redirect-to-https" else "allow-all"
@@ -41,63 +57,56 @@ module.exports = async (config, cf) ->
       originID = "Haiku9-" + regularlyQualify name
 
       # Fill out configuration for CloudFront distribution... it's a doozy.
-      params =
-        DistributionConfig:
-          CallerReference: "Haiku " + randomKey 32
-          Comment: "Origin is S3 bucket. Setup by Haiku9."
-          Enabled: true
-          PriceClass: "PriceClass_" + priceClass
-          DefaultRootObject: ""
+      CallerReference: "Haiku " + randomKey 32
+      Comment: "Origin is S3 bucket. Setup by Haiku9."
+      Enabled: true
+      PriceClass: "PriceClass_" + priceClass
+      DefaultRootObject: ""
 
-          Aliases:
-            Quantity: 1
-            Items: [ name ]
+      Aliases:
+        Quantity: 1
+        Items: [ name ]
 
-          Origins:
-            Quantity: 1
-            Items: [
-              Id: originID
-              DomainName: buildSource name
-              CustomOriginConfig:
-                HTTPPort: 80
-                HTTPSPort: 443
-                OriginProtocolPolicy: "http-only"
-            ]
+      Origins:
+        Quantity: 1
+        Items: [
+          Id: originID
+          DomainName: buildSource name
+          CustomOriginConfig:
+            HTTPPort: 80
+            HTTPSPort: 443
+            OriginProtocolPolicy: "http-only"
+        ]
 
-          DefaultCacheBehavior:
-            TargetOriginId: originID
-            ForwardedValues:
-              QueryString: false
-              Cookies:
-                Forward: "none"
-              Headers:
-                Quantity: 0
-            MinTTL: 0
-            MaxTTL: config.aws.cache.expires || 60
-            TrustedSigners:
-              Enabled: false
-              Quantity: 0
-            ViewerProtocolPolicy: protocolPolicy
-            AllowedMethods:
-              Items: [ "GET", "HEAD" ]
-              Quantity: 2
-              CachedMethods:
-                Items: [ "GET", "HEAD" ]
-                Quantity: 2
-            Compress: false
+      ViewerCertificate: yield setViewerCertificate()
 
-      if ssl
-        params.DistributionConfig.ViewerCertificate =
-          MinimumProtocolVersion: "TLSv1"
-          SSLSupportMethod: "sni-only"
-          ACMCertificateArn: yield acm.fetch config.aws.hostnames[0]
+      DefaultCacheBehavior:
+        TargetOriginId: originID
+        ForwardedValues:
+          QueryString: false
+          Cookies:
+            Forward: "none"
+          Headers:
+            Quantity: 0
+        MinTTL: 0
+        MaxTTL: config.aws.cache.expires || 60
+        TrustedSigners:
+          Enabled: false
+          Quantity: 0
+        ViewerProtocolPolicy: protocolPolicy
+        AllowedMethods:
+          Items: [ "GET", "HEAD" ]
+          Quantity: 2
+          CachedMethods:
+            Items: [ "GET", "HEAD" ]
+            Quantity: 2
+        Compress: false
 
-      return params
 
 
     createDistribution = async (name) ->
       try
-        params = yield buildConfiguration name
+        params = DistributionConfig: yield buildConfiguration name
         distribution = yield cf.createDistribution params
         distribution.isNew = true
         distribution
@@ -106,56 +115,32 @@ module.exports = async (config, cf) ->
           "distribution.", e
         throw new Error()
 
-    updateDistribution = async (name, id, tag) ->
-      console.error "A CloudFront distribution using an S3 bucket with this " +
-        "name has been detected.  Currently, Haiku9 cannot update the " +
-        "distribution through the API. Please delete the distribution before " +
-        "trying again.  Aborting."
-
-      process.exit()
-
-      # TODO: Have this API endpoint work properly.
-      # try
-      #   params = {Id: id, IfMatch: tag}
-      #   yield cf.deleteDistribution params
-      #
-      #   params = yield buildConfiguration name
-      #   distribution = yield cf.updateDistribution params
-      #   distribution.isNew = true
-      #   distribution
-      # catch e
-      #   console.error "Unexpected response while updating CloudFront" +
-      #     "distribution.", e
-      #   throw new Error()
-
-    confirmDistributionConfig = async (match, ssl, name, id, tag) ->
+    updateDistribution = async (ETag, Distribution) ->
       try
-        priceClass = "PriceClass_" + (config.aws.cache.priceClass || "100")
-        ttl = config.aws.cache.expires || 60
-        cert = yield acm.fetch config.aws.hostnames[0]
-        _priceClass = match.PriceClass
-        _ttl = match.DefaultCacheBehavior.MaxTTL
-        _cert = match.ViewerCertificate?.ACMCertificateArn
+        params =
+          Id: Distribution.Id
+          IfMatch: ETag
+          DistributionConfig: Distribution.DistributionConfig
 
-        step1 = ->
-          if priceClass == _priceClass && ttl == _ttl
-            true
-          else
-            false
-
-        step2 = ->
-          if ssl
-            if cert == _cert then true else false
-          else
-            match.ViewerCertificate.CloudFrontDefaultCertificate
-
-        if step1() && step2()
-          match
-        else
-          updateDistribution name, id, tag
+        yield cf.updateDistribution params
       catch e
-        console.error e
-        process.exit()
+        console.error "Unexpected response while updating CloudFront" +
+          "distribution.", e
+        throw new Error()
+
+
+    confirmDistributionConfig = async ({ETag, Distribution}) ->
+      distro = clone Distribution.DistributionConfig
+
+      distro.PriceClass = "PriceClass_" + (config.aws.cache.priceClass || "100")
+      distro.DefaultCacheBehavior.MaxTTL = config.aws.cache.expires || 60
+      distro.ViewerCertificate = yield setViewerCertificate()
+
+      if deepEqual distro, Distribution.DistributionConfig
+        Distribution
+      else
+        updateDistribution ETag, Distribution
+
 
 
 
@@ -165,7 +150,6 @@ module.exports = async (config, cf) ->
       # Search the user's current distributions for ones that matches our needs.
       # If we don't find one, create it. If it's misconfigured, update it.
       list = (yield cf.listDistributions {}).DistributionList.Items
-      ssl = config.aws.cache.ssl
 
       pattern =
         Aliases:
@@ -180,11 +164,11 @@ module.exports = async (config, cf) ->
       # If the distribution does exist, get its ID and current version ETag.
       match = matches[0]
       id = match.Id
-      tag = (yield cf.getDistribution {Id: id}).ETag
+      current = yield cf.getDistribution {Id: id}
 
       # Confirm that the distribution is correctly configured. Return it
       # if true, update it if false and return the new object
-      yield confirmDistributionConfig match, ssl, name, id, tag
+      yield confirmDistributionConfig current
 
     catch e
       console.error "Unexpected response while prepping CloudFront distro", e

@@ -3,10 +3,9 @@
 {homedir} = require "os"
 
 AWS = require "aws-sdk"
-{safeLoad} = require "js-yaml"
 wlift = (require "when/node").lift
 
-{async, read, isFunction} = require "fairmont"
+{async, read, isFunction, where} = require "fairmont"
 {task} = require "panda-9000"
 
 # aws-sdk is a little odd.  We must instantiate a given service's sub-library
@@ -20,14 +19,24 @@ liftModule = (m) ->
   out[k] = lift m, v for k, v of m
   out
 
-# For now, this assumes AWS credentials are stored in a Yaml document at ~/.h9
-# TODO: Is this an okay way to handle this?
-awsPath = join homedir(), ".h9"
+parseCreds = (data) ->
+  lines = data.split "\n"
+  get = (line) -> line.split(/\s*=\s*/)[1]
+  where = (phrase) ->
+    for i in [0...lines.length]
+      return i if lines[i].indexOf(phrase) >= 0
+
+  id: get lines[where "aws_access_key_id"]
+  key: get lines[where "aws_secret_access_key"]
+
+# Looks for AWS credentials stored at ~/.aws/credentials
+awsPath = join homedir(), ".aws", "credentials"
+
+
 
 module.exports = async (region) ->
-  config = safeLoad yield read awsPath
+  {id, key} = parseCreds yield read awsPath
   repoConfig = require "./configuration"
-  {id, key} = config.aws
   AWS.config =
      accessKeyId: id
      secretAccessKey: key
