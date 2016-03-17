@@ -30,10 +30,10 @@ environment:
           items:
             type: string
 
-    root:
+    apex:
       description:
         In addition to the hostnames property, this optional flag will add
-        the root domain to the list of hostnames.  The root is always treated
+        the apex domain to the list of hostnames.  The root is always treated
         as a secondary hostname, and will be routed to the primary one
         specified in the "hostnames" field.
         Example "example.com" to "www.example.com"
@@ -73,4 +73,3 @@ environment:
               multipleOf: 100
               minimum: 100
               maximum: 200
-  

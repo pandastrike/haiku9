@@ -22,6 +22,7 @@ module.exports = (config, env) ->
   # Construct an array of full subdomains to feed the process.
   names = []
   names.push (name + "." + aws.domain) for name in env.hostnames
+  names.push aws.domain if env.apex
   out.aws.hostnames = names
 
   # Pull CloudFront (cdn / caching) info into the config
