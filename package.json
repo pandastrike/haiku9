@@ -1,12 +1,13 @@
 {
   "name": "haiku9",
-  "version": "1.1.0-beta-02",
+  "version": "1.1.0-beta-03",
   "description": "Asset compilation, static-site generator",
   "main": "lib/index.js",
   "bin": {
     "h9": "bin/h9",
     "h9-server": "bin/h9-serve",
-    "h9-compile": "bin/h9-build"
+    "h9-compile": "bin/h9-build",
+    "h9-publish": "bin/h9-publish"
   },
   "dependencies": {
     "aws-sdk": "^2.2.26",
