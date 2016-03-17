@@ -5,7 +5,7 @@ program = require "commander"
 
 call ->
 
-  version = yield read join __dirname, "..", "VERSION"
+  {version} = JSON.parse yield read join __dirname, "..", "package.json"
 
   program
     .version(version)

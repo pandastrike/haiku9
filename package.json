@@ -35,8 +35,7 @@
     "prepublish": "coffee -o lib/ -c src/*.coffee",
     "test": "coffee test/index.coffee",
     "watch": "coffee -o lib/ -cw src/",
-    "version": "(node_modules/.bin/json -f package.json version > VERSION)",
-    "tag": "(node_modules/.bin/json -f package.json version | tee VERSION | xargs -I version git tag -am version version) && git push --tags"
+    "postpublish": "(json -f package.json version | xargs -I version git tag -am version version) && git push --tags"
   },
   "repository": {
     "type": "git",
