@@ -12,7 +12,6 @@ include Asset,
     iterator values _assets
 
   find: ({path, extension}) ->
-    console.log _assets
     if (rx = _assets[path])?
       if !extension
         first values rx
