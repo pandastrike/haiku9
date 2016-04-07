@@ -6,7 +6,7 @@ rl = readline.createInterface
 {createReadStream} = require "fs"
 {join} = require "path"
 
-{async, cat} = require "fairmont"
+{async, cat, stat} = require "fairmont"
 mime = require "mime"
 
 # Uploads / Deletes S3 objects as neccessary from the target bucket.
@@ -37,6 +37,17 @@ module.exports = (config, s3) ->
         rl.write "\n"
         rl.close()
 
+    # Helper to screen out files larger than 5 GB. They cannot be stored in a
+    # single S3 object, which interferes with our static-site ability.
+    isTooLarge = async (path) ->
+      {size} = yield stat path
+      if size > 4999999999
+        console.warn "The file #{path} is larger than 5GB and is too large to
+        store within a single S3 object.  Haiku9 currently does not support
+        multi-object files, so it is skipping this file during the sync."
+        true
+      else
+        false
 
     # Delete Files
     try
@@ -68,6 +79,7 @@ module.exports = (config, s3) ->
     # Upload Files
     try
       for {file, hash} in ulist
+        continue if yield isTooLarge join(config.target, file)
         params =
           Bucket: config.aws.hostnames[0]
           Key: file.split(".html")[0]   # Strip ".html" extension for S3 key.
