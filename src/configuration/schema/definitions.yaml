@@ -33,11 +33,13 @@ environment:
     apex:
       description:
         In addition to the hostnames property, this optional flag will add
-        the apex domain to the list of hostnames.  The root is always treated
-        as a secondary hostname, and will be routed to the primary one
-        specified in the "hostnames" field.
+        the apex domain to the list of hostnames. Choosing "primary"
+        overrides the first name specified in the "hostnames" field.  All
+        hostnames will route to the apex. However, choosing "secondary" causes
+        the apex to be treated as a just another secondary hostname.
         Example "example.com" to "www.example.com"
-      type: boolean
+      type: string
+      enum: [ "primary", "secondary" ]
 
 
     cache:
