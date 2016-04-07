@@ -83,9 +83,9 @@ module.exports = async (config, cf) ->
       DefaultCacheBehavior:
         TargetOriginId: originID
         ForwardedValues:
-          QueryString: false
+          QueryString: true
           Cookies:
-            Forward: "none"
+            Forward: "all"
           Headers:
             Quantity: 0
         MinTTL: 0
