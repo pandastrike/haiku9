@@ -10,7 +10,7 @@ aws:
     error: 404
 
   environments:
-    - title: staging
+    staging:
       hostnames:
         - david-staging
         - david-beta-staging
@@ -19,7 +19,7 @@ aws:
       #   ssl: false
       #   priceClass: 100
 
-    - title: production
+    production:
       hostnames:
         - david
         - david-beta
@@ -28,7 +28,7 @@ aws:
         ssl: true
         priceClass: 100
 
-    - title: nonSSL
+    nonSSL:
       hostnames:
         - david2
         - david2-beta
