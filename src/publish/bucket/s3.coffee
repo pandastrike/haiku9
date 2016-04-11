@@ -1,4 +1,4 @@
-{async} = require "fairmont"
+{async, sleep} = require "fairmont"
 
 module.exports = (s3) ->
 
@@ -15,7 +15,7 @@ module.exports = (s3) ->
         when 403
           console.error "You are not authorized to modify this bucket."
           throw new Error()
-        when 404 
+        when 404
           exists = false
         else
           console.error "Unexpected reply from AWS", e
@@ -26,7 +26,7 @@ module.exports = (s3) ->
     # Create a new, empty S3 bucket.
     try
       yield s3.createBucket {Bucket: name, ACL: "public-read"}
-      false
+      yield sleep 15000
     catch e
       console.error "Failed to establish bucket.", e
       throw new Error()
