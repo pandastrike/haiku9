@@ -21,8 +21,8 @@ define "survey/markdown", ["data"], ->
     tee save
   ]
 
-Method.define render, (isType type), async (asset) ->
-  do (source) ->
+Method.define render, (isType type), do (source) ->
+  async (asset) ->
     {source} = asset
     markdown = (yield read source.path)
       .replace /\n/gm, "\n    "
