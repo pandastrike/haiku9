@@ -3,21 +3,18 @@
 {homedir} = require "os"
 
 AWS = require "aws-sdk"
-wlift = (require "when/node").lift
 
-{async, read, isFunction, where} = require "fairmont"
+{async, read, isFunction, where, lift} = require "fairmont"
 {task} = require "panda-9000"
 
-# aws-sdk is a little odd.  We must instantiate a given service's sub-library
-# before we may access its methods.  But, once it's done, we can go
-# through the sub-module and use when.js to "lift" each method.
-lift = (object, k) ->
-  if isFunction k then wlift k.bind object else k
+# this should be in f-core
+bind = (o, f) -> f.bind o
 
 liftModule = (m) ->
-  out = {}
-  out[k] = lift m, v for k, v of m
-  out
+  lifted = {}
+  for k, v of m
+    lifted[k] = if isFunction k then (lift k.bind m) else k
+  lifted
 
 parseCreds = (data) ->
   lines = data.split "\n"
