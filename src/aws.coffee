@@ -13,7 +13,7 @@ bind = (o, f) -> f.bind o
 liftModule = (m) ->
   lifted = {}
   for k, v of m
-    lifted[k] = if isFunction k then (lift k.bind m) else k
+    lifted[k] = if isFunction v then (lift v.bind m) else v
   lifted
 
 parseCreds = (data) ->
