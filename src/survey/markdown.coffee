@@ -21,16 +21,14 @@ define "survey/markdown", ["data"], ->
     tee save
   ]
 
-Method.define render, (isType type), do (source) ->
-  async (asset) ->
-    {source} = asset
-    markdown = (yield read source.path)
-      .replace /\n/gm, "\n    "
-      .replace /\#\{/g, '\\#{'
-    source.content = """
-      extends _layout
-      block content
-        :markdown
-          #{markdown}
-    """
-    jade asset
+Method.define render, (isType type), async (asset) ->
+  markdown = (yield read asset.source.path)
+    .replace /\n/gm, "\n    "
+    .replace /\#\{/g, '\\#{'
+  asset.source.content = """
+    extends _layout
+    block content
+      :markdown
+        #{markdown}
+  """
+  jade asset
