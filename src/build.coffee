@@ -1,6 +1,5 @@
-{go, tee, pull, values, async} = require "fairmont"
+{go, tee, pull, values, async, lift} = require "fairmont"
 {define, write} = require "panda-9000"
-{lift} = require "when/node"
 rmrf = lift require "rimraf"
 
 {render} = Asset = require "./asset"

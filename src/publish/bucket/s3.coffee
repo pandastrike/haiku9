@@ -14,12 +14,12 @@ module.exports = (s3) ->
           throw new Error()
         when 403
           console.error "You are not authorized to modify this bucket."
-          throw new Error()
+          throw e
         when 404
           exists = false
         else
           console.error "Unexpected reply from AWS", e
-          throw new Error()
+          throw e
 
     return true if exists
 

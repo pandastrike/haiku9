@@ -4,7 +4,6 @@
 
 mime = require "mime"
 {async, lsR, collect, flow, map, pull, read, md5} = require "fairmont"
-
 {target} = require "../configuration"
 
 module.exports =
