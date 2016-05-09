@@ -3,7 +3,7 @@ target: "build"
 server:
   port: 8080
 aws:
-  domain: pandastrike.com
+  domain: panda-demo.com
   region: us-west-2
   site:
     index: index
@@ -12,8 +12,8 @@ aws:
   environments:
     staging:
       hostnames:
-        - david-staging
-        - david-beta-staging
+        - www-staging
+        - staging
       # cache:
       #   expires: 60 # 1 minute
       #   ssl: false
@@ -21,8 +21,8 @@ aws:
 
     production:
       hostnames:
-        - david
-        - david-beta
+        - www
+      apex: secondary
       cache:
         expires: 1800 # 30 minutes
         ssl: true

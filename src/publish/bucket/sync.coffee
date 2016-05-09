@@ -16,7 +16,10 @@ module.exports = (config, s3) ->
   async ({dlist, ulist}) ->
     console.log "Syncing S3 bucket."
     total = (cat dlist, ulist).length
-    rl.close() if total == 0
+
+    if total == 0
+      rl.close()
+      console.log "  ***Warning: S3 Bucket is up-to-date.  Nothing to sync."
     currentIndex = 0
 
     printProgress = ->

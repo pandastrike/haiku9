@@ -14,22 +14,14 @@ module.exports = (config, route53) ->
   build = async (distributions) ->
     changeList = []  # Ultimate goal is to fill this with actions.
 
-    # Adds a deletion event to the DNS batch changes.
-    # TODO: Make deletion more robust at deleting different kinds of records.
-    addDeletion = (record, target) ->
-      delete record[0].ResourceRecords if empty record[0].ResourceRecords
-
-      Action: "DELETE",
-      ResourceRecordSet: record[0]
-
     # Adds a creation event to the DNS batch changes.
-    addCreation = (source, target) ->
+    addUpsert = (source, target) ->
       if distributions
         HostedZoneId = "Z2FDTNDATAQYW2"
       else
         HostedZoneId = require("./s3-hostedzone-ids")[config.aws.region]
 
-      Action: "CREATE",
+      Action: "UPSERT",
       ResourceRecordSet:
         Name: target
         Type: "A"
@@ -56,20 +48,18 @@ module.exports = (config, route53) ->
       record = collect where {Name: hostname}, records
 
       if !empty record
-        # Escape if there's nothing to change, else add a deletion task.
-        desired = addCreation(source, hostname).ResourceRecordSet
+        # Escape if there's nothing to change.
+        desired = addUpsert(source, hostname).ResourceRecordSet
         current = record[0]
-        delete current.ResourceRecords if empty current.ResourceRecords
-
         return null if deepEqual desired, current
-        changeList.push addDeletion record, hostname
 
-      # Add a creation task.
-      changeList.push addCreation source, hostname
-
+      # Add an update to the DNS changeList.
+      changeList.push addUpsert source, hostname
 
 
-    # "Main" section of build(), construct the changeList
+
+    # "Main" section of build(). Construct the DNS changeList, which is declared
+    # above, with reconcile(). Escape if there's nothing to change.
     try
       id = yield getHostedZoneID()
       records = yield route53.listResourceRecordSets HostedZoneId: id
@@ -88,8 +78,6 @@ module.exports = (config, route53) ->
       for i in [0...hostnames.length]
         reconcile records, hostnames[i], sources[i]
 
-      # changeList is declared above. The goal is to build a list with reconcile
-      # If there are changes, return the configuration object for the AWS call.
       if empty changeList
         false
       else
