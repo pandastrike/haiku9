@@ -97,6 +97,10 @@ properties:
           Organizing configuration for those two cases into separate
           environments allows you to publish from the commandline by just
           invoking the name, not adjusting configuration each time.
-        type: array
-        minItems: 1
-        items: {$ref: "#/definitions/environment"}
+
+          environments is an object where the keys are the name of the given
+          environment and its value is its definition.  Use "h9 publish <title>"
+          to invoke this configuration within the publish process.
+        type: object
+        minProperties: 1
+        additionalProperties: {$ref: "#/definitions/environment"}

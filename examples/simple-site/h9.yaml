@@ -3,32 +3,32 @@ target: "build"
 server:
   port: 8080
 aws:
-  domain: pandastrike.com
+  domain: panda-demo.com
   region: us-west-2
   site:
     index: index
     error: 404
 
   environments:
-    - title: staging
+    staging:
       hostnames:
-        - david-staging
-        - david-beta-staging
+        - www-staging
+        - staging
       # cache:
       #   expires: 60 # 1 minute
       #   ssl: false
       #   priceClass: 100
 
-    - title: production
+    production:
       hostnames:
-        - david
-        - david-beta
+        - www
+      apex: secondary
       cache:
         expires: 1800 # 30 minutes
         ssl: true
         priceClass: 100
 
-    - title: nonSSL
+    nonSSL:
       hostnames:
         - david2
         - david2-beta

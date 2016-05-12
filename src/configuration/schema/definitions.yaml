@@ -4,15 +4,8 @@ environment:
     distributions that are allocated on your behalf to deploy the static site.
   type: object
   additionalProperties: false
-  required: [ title, hostnames ]
+  required: [ hostnames ]
   properties:
-    title:
-      description:
-        Name of the environment.  Use "h9 publish <title>" to invoke this
-        configuration for the publish process.
-      type: string
-      minLength: 1
-
     hostnames:
       description:
         Name or names under which H9 creates subdomains and publishes your
@@ -33,11 +26,13 @@ environment:
     apex:
       description:
         In addition to the hostnames property, this optional flag will add
-        the apex domain to the list of hostnames.  The root is always treated
-        as a secondary hostname, and will be routed to the primary one
-        specified in the "hostnames" field.
+        the apex domain to the list of hostnames. Choosing "primary"
+        overrides the first name specified in the "hostnames" field.  All
+        hostnames will route to the apex. However, choosing "secondary" causes
+        the apex to be treated as a just another secondary hostname.
         Example "example.com" to "www.example.com"
-      type: boolean
+      type: string
+      enum: [ "primary", "secondary" ]
 
 
     cache:

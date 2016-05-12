@@ -12,17 +12,16 @@ module.exports = (config, env) ->
   }
 
   # Pull config data for the requested environment.
-  env = collect where {title: env}, aws.environments
-  if empty env
+  env = aws.environments[env]
+  if !env
     console.error "Cannot find config for specified environment. Aborting."
     throw new Error()
-  else
-    env = env[0]
 
   # Construct an array of full subdomains to feed the process.
   names = []
   names.push (name + "." + aws.domain) for name in env.hostnames
-  names.push aws.domain if env.apex
+  names.unshift aws.domain  if env.apex == "primary"
+  names.push aws.domain     if env.apex == "secondary"
   out.aws.hostnames = names
 
   # Pull CloudFront (cdn / caching) info into the config
