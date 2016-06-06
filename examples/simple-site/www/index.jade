@@ -5,9 +5,13 @@ html(lang="en")
     link(rel='stylesheet', href='/site.css')
     script(type='text/javascript',
       src='https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js')
+    script(type='text/javascript', src='/moment.js')
     script(type='text/javascript', src='/site.js')
   body
 
     h1 Hello There
+    p If you're seeing this page, you've successfully deployed the test page.  Click the button below to confirm JavaScript functionality.
 
-    p This is an example
+    button(onclick="reveal()") Click Me!
+    
+    p#timeLabel
