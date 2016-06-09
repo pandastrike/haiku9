@@ -8,7 +8,6 @@ Method} = require "fairmont"
 {define, context, jade} = require "panda-9000"
 {find, save, render} = Asset = require "../asset"
 {pathWithUnderscore} = require "../utils"
-{source, blog} = require "../configuration"
 Data = require "../data"
 
 _reverse = (array) -> array.reverse()
@@ -24,6 +23,7 @@ reverse = (r) ->
 type = Type.define Asset
 
 define "survey/posts", ["survey/markdown"], ->
+  {source, blog} = require "../configuration"
   if blog?
     go [
       glob "posts/*.md", source

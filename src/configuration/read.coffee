@@ -1,5 +1,5 @@
 {readFileSync} = require "fs"
-{join} = require "path"
+{join, resolve} = require "path"
 
 JSCK = require "jsck"
 {empty} = require "fairmont"
@@ -7,9 +7,10 @@ yaml = require "js-yaml"
 
 module.exports = do ->
   try
-    schema = yaml.safeLoad readFileSync join(__dirname, "schema", "main.yaml")
-    schema.definitions =
-      yaml.safeLoad readFileSync join(__dirname, "schema", "definitions.yaml")
+    schema = yaml.safeLoad readFileSync resolve join(__dirname, "..", "..",
+      "configuration-schema", "main.yaml")
+    schema.definitions = yaml.safeLoad readFileSync resolve join(__dirname,
+      "..", "..", "configuration-schema", "definitions.yaml")
 
     jsck = new JSCK.draft4 schema
     config = yaml.safeLoad readFileSync "h9.yaml"

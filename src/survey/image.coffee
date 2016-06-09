@@ -9,13 +9,13 @@ glob} = require "fairmont"
 {define, context} = require "panda-9000"
 {save, render} = Asset = require "../asset"
 {pathWithUnderscore} = require "../utils"
-{source} = require "../configuration"
 
 formats = w ".jpg .png .webp .svg .gif .ico"
 
 type = Type.define Asset
 
 define "survey/image", ->
+  {source} = require "../configuration"
   go [
     glob "**/*{#{formats.join ','}}", source
     reject pathWithUnderscore

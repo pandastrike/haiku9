@@ -3,10 +3,9 @@
 rmrf = lift require "rimraf"
 
 {render} = Asset = require "./asset"
-{source, target} = require "./configuration"
 
 define "build", ["survey"], async ->
-
+  {source, target} = require "./configuration"
   yield rmrf target
 
   yield go [

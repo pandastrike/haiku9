@@ -1,15 +1,3 @@
-#!/usr/bin/env coffee
-{join} = require "path"
-program = require "commander"
-{call, read} = require "fairmont"
+#!/usr/bin/env node
 
-call ->
-
-  {version} = JSON.parse yield read join __dirname, "..", "package.json"
-
-  program
-    .version(version)
-    .command('serve', 'run a Web server to serve your content')
-    .command('build', 'compile the Website assets into the "target" directory')
-    .command('publish', 'deploy Website assets from "target" to AWS infrastructure')
-    .parse(process.argv);
+require("../lib/cli");

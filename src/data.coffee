@@ -3,7 +3,6 @@
 {define, context} = require "panda-9000"
 yaml = require "js-yaml"
 loadYAML = async (path) -> yaml.safeLoad yield read path
-{source} = require "./configuration"
 
 Data =
 
@@ -31,6 +30,7 @@ Data =
     include asset.data, Data.root, Data.get asset.path
 
 define "data", async ->
+  {source} = require "./configuration"
   yield go [
     glob "**/*.yaml", source
     map context source

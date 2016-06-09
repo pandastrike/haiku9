@@ -6,13 +6,13 @@ glob} = require "fairmont"
 {define, context} = require "panda-9000"
 {save, render} = Asset = require "../asset"
 {pathWithUnderscore} = require "../utils"
-{source} = require "../configuration"
 
 formats = w ".html .css .js .woff .ttf"
 
 type = Type.define Asset
 
 define "survey/pass-thru", ->
+  {source} = require "../configuration"
   go [
     glob "**/*{#{formats.join ','}}", source
     reject pathWithUnderscore
