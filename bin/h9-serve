@@ -1,5 +1,0 @@
-#!/usr/bin/env coffee
-
-require "../src"
-{run} = require "panda-9000"
-run "serve"

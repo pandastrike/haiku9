@@ -3,12 +3,12 @@
 {define, context, coffee} = require "panda-9000"
 {save, render} = Asset = require "../asset"
 {pathWithUnderscore} = require "../utils"
-{source} = require "../configuration"
 Data = require "../data"
 
 type = Type.define Asset
 
 define "survey/coffee", ->
+  {source} = require "../configuration"
   go [
     glob "**/*.coffee", source
     reject pathWithUnderscore

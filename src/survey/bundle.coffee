@@ -9,11 +9,11 @@ glob, read} = require "fairmont"
 browserify = require "browserify"
 coffeeify = require "coffeeify"
 {save, render} = Asset = require "../asset"
-{source} = require "../configuration"
 
 type = Type.define Asset
 
 define "survey/bundle", ->
+  {source} = require "../configuration"
   go [
     glob "**/package.json", source
     reject isMatch /node_modules/

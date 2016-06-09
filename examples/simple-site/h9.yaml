@@ -14,10 +14,6 @@ aws:
       hostnames:
         - www-staging
         - staging
-      # cache:
-      #   expires: 60 # 1 minute
-      #   ssl: false
-      #   priceClass: 100
 
     production:
       hostnames:

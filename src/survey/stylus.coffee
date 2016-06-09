@@ -6,11 +6,11 @@ glob} = require "fairmont"
 {define, context, stylus} = require "panda-9000"
 {save, render} = Asset = require "../asset"
 {pathWithUnderscore} = require "../utils"
-{source} = require "../configuration"
 
 type = Type.define Asset
 
 define "survey/stylus", ->
+  {source} = require "../configuration"
   go [
     glob "**/*.styl", source
     reject pathWithUnderscore

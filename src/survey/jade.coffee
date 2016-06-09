@@ -7,11 +7,11 @@ glob} = require "fairmont"
 {save, render} = Asset = require "../asset"
 Data = require "../data"
 {pathWithUnderscore} = require "../utils"
-{source} = require "../configuration"
 
 type = Type.define Asset
 
 define "survey/jade", ["data"], ->
+  {source} = require "../configuration"
   go [
     glob "**/*.jade", source
     reject pathWithUnderscore

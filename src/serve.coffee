@@ -7,7 +7,6 @@ spread,
 events, go, map, tee} = require "fairmont"
 {define, run, context} = require "panda-9000"
 {find, render} = require "./asset"
-{source, server} = require "./configuration"
 
 httpLogger = ({request, response}) ->
   start = Date.now()
@@ -18,7 +17,7 @@ httpLogger = ({request, response}) ->
     console.log "#{method} #{url} - #{code} (#{duration}ms)"
 
 define "serve", ["survey"], ->
-
+  {source, server} = require "./configuration"
   watcher = require "chokidar"
 
   # re-run the survey when things change
