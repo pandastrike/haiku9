@@ -1,17 +1,25 @@
+{build, isBuilt} = require "./helpers/build_helpers"
+
 {join} = require "path"
-{run} = require "panda-9000"
 assert = require "assert"
-{shell, sleep, call, exists, promise} = require "fairmont"
+{chdir, promise} = require "fairmont"
 http = require "http"
 childProcess = require "child_process"
 Amen = require "amen"
 
+SERVE_FILE = join __dirname, "helpers", "server.coffee"
 SERVE_STARTUP_TIMEOUT = 5000
 
 Amen.describe "Haiku9 serve task", (context) ->
   context.test "Starts a local server on the default port", ->
-    command = join __dirname, "..", "bin", "h9"
-    child = childProcess.spawn(command, ["serve"])
+    # Build the jade fixture if needed
+    unless yield isBuilt "jade", "index.html"
+      yield build "jade"
+
+    # CD into the jade fixture to run it
+    child = null
+    chdir join(__dirname, "fixtures", "jade"), ->
+      child = childProcess.fork(SERVE_FILE)
 
     # Give the server a few seconds to spin up (but resolve immediately when you can)
     start = now = new Date()
