@@ -24,3 +24,9 @@ Amen.describe "Haiku9 static-site generation", (context) ->
 
     context.test "Compile CoffeeScript files", ->
       assert yield exists "build/site.js"
+
+    context.test "Passes through xml files", ->
+      assert yield exists "build/browserconfig.xml"
+
+    context.test "Passes through json files", ->
+      assert yield exists "build/manifest.json"
