@@ -3,13 +3,11 @@ require "../../src/index"
 {join} = require "path"
 assert = require "assert"
 childProcess = require 'child_process'
-{shell, sleep, call, exists, chdir} = require "fairmont"
+{shell, call, exists, chdir, promise} = require "fairmont"
 
 HOME_DIR = join __dirname, "..", ".."
 BASE_FIXTURE_DIR = join HOME_DIR, "test", "fixtures"
 BUILD_FILE = join __dirname, "builder.coffee"
-
-BUILD_TIMEOUT = 5000
 
 fixtureDir = (fixture) ->
   join BASE_FIXTURE_DIR, fixture
@@ -28,7 +26,9 @@ build = (fixture) ->
     moveTo fixture
     yield shell "rm -rf build"
     moveTo fixture
-    childProcess.fork(BUILD_FILE)
+    yield promise (resolve, reject) ->
+      child = childProcess.fork(BUILD_FILE)
+      child.on 'exit', -> resolve()
     moveHome()
 
 # Predicate, returns true if the `expectedFile` exists
@@ -39,18 +39,7 @@ isBuilt = (fixture, expectedFile) ->
 
 # Asserts that the given test file exists under the fixture's build directory
 assertBuilt = (fixture, expectedFile) ->
-  call ->
-    start = now = new Date()
-    fileExists = false
-
-    while now - start <= BUILD_TIMEOUT
-      if fileExists = yield isBuilt(fixture, expectedFile)
-        break
-      else
-        yield sleep 10
-        now = new Date()
-
-    assert fileExists, "File #{expectedFile} not built"
+  assert yield isBuilt(fixture, expectedFile), "File #{expectedFile} not built"
 
 buildAndVerify = (fixture, expectedFile) ->
   call ->
