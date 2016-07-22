@@ -39,7 +39,8 @@ isBuilt = (fixture, expectedFile) ->
 
 # Asserts that the given test file exists under the fixture's build directory
 assertBuilt = (fixture, expectedFile) ->
-  assert yield isBuilt(fixture, expectedFile), "File #{expectedFile} not built"
+  call ->
+    assert yield isBuilt(fixture, expectedFile), "File #{expectedFile} not built"
 
 buildAndVerify = (fixture, expectedFile) ->
   call ->
