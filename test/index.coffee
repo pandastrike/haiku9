@@ -5,6 +5,7 @@ if targets.length is 0
     "coffeescript"
     "jade"
     "json"
+    "scss"
     "serve"
     "stylus"
     "xml"

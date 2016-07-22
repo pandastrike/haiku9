@@ -12,6 +12,8 @@ type = Type.define Asset
 define "survey/sass", ->
   {source} = require "../configuration"
   go [
+    # node-sass only supports SCSS
+    # https://github.com/sass/libsass/issues/16
     glob "**/*.scss", source
     reject pathWithUnderscore
     map context source
