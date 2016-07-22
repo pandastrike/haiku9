@@ -1,5 +1,5 @@
 {go, map, tee, reject,
-include, Type, isType, isMatch,
+include, Type, isType,
 Method,
 glob} = require "fairmont"
 
@@ -9,7 +9,7 @@ glob} = require "fairmont"
 
 type = Type.define Asset
 
-define "survey/sass", ->
+define "survey/scss", ->
   {source} = require "../configuration"
   go [
     # node-sass only supports SCSS
