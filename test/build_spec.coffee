@@ -19,6 +19,9 @@ Amen.describe "Haiku9 static-site generation", (context) ->
     context.test "Compile Jade files", ->
       assert yield exists "build/index.html"
 
+    context.test "Compile SASS/SCSS files", ->
+      assert yield exists "build/site-scss.css"
+
     context.test "Compile Stylus files", ->
       assert yield exists "build/site.css"
 
