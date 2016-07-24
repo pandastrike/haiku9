@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/pandastrike/haiku9.svg)](https://travis-ci.org/pandastrike/haiku9)
+
 # Haiku9
 
 Haiku9 (H9 for short) is a static site generator. H9 supports:
