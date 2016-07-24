@@ -12,14 +12,15 @@
   "bin": {
     "h9": "./bin/h9"
   },
-  "engines" : {
-    "node" : ">=4.0.0"
+  "engines": {
+    "node": ">=4.0.0"
   },
   "engine-strict": true,
   "dependencies": {
     "aws-sdk": "2.2.48",
     "browserify": "^12.0.1",
     "chokidar": "^1.2.0",
+    "coffee-script": "^1.10.0",
     "coffeeify": "^2.0.1",
     "commander": "^2.9.0",
     "express": "^4.13.3",
@@ -35,6 +36,7 @@
   },
   "devDependencies": {
     "amen": "^1.0.0",
+    "coffee-script": "^1.10.0",
     "json": "^9.0.3"
   },
   "scripts": {
