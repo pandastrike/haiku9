@@ -9,6 +9,8 @@ HOME_DIR = join __dirname, "..", ".."
 BASE_FIXTURE_DIR = join HOME_DIR, "test", "fixtures"
 BUILD_FILE = join __dirname, "builder.coffee"
 
+BUILD_TIMEOUT = 5000
+
 fixtureDir = (fixture) ->
   join BASE_FIXTURE_DIR, fixture
 
@@ -40,7 +42,15 @@ isBuilt = (fixture, expectedFile) ->
 # Asserts that the given test file exists under the fixture's build directory
 assertBuilt = (fixture, expectedFile) ->
   call ->
-    assert yield isBuilt(fixture, expectedFile), "File #{expectedFile} not built"
+    start = now = new Date()
+    built = false
+    while now - start <= BUILD_TIMEOUT
+      if built = yield isBuilt(fixture, expectedFile)
+        break
+      else
+        now = new Date()
+
+    assert built, "File #{expectedFile} not built"
 
 buildAndVerify = (fixture, expectedFile) ->
   call ->
