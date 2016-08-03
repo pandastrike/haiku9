@@ -3,7 +3,7 @@ include, Type, isType,
 Method,
 glob} = require "fairmont"
 
-{define, context, sass} = require "panda-9000"
+{define, context, scss} = require "panda-9000"
 {save, render} = Asset = require "../asset"
 {pathWithUnderscore} = require "../utils"
 
@@ -22,4 +22,4 @@ define "survey/scss", ->
     tee save
   ]
 
-Method.define render, (isType type), sass
+Method.define render, (isType type), scss
