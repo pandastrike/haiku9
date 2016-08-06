@@ -20,7 +20,7 @@ module.exports = async (config, cf) ->
     # in every case we invalidate the cache after an update.
     sync: async (distributions, changes)->
       console.log "Waiting for CloudFront distribution to deploy. " +
-        "This may take several minutes."
+        "This will take 15-30 minutes."
 
       yield cf.sync distro for distro in distributions
 
