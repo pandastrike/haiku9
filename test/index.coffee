@@ -6,6 +6,7 @@ if targets.length is 0
     "handlebars"
     "jade"
     "json"
+    "scss"
     "serve"
     "stylus"
     "xml"
