@@ -6,6 +6,7 @@ Haiku9 (H9 for short) is a static site generator. H9 supports:
 
 * Jade templates
 * Markdown
+* Handlebars (via [Panda Template](https://github.com/pandastrike/panda-template))
 * CoffeeScript
 * Stylus
 * Image files
