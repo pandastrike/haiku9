@@ -16,6 +16,10 @@ to define a series of asset pipelines.
 
 H9 provides a build command and simple Web server for development.
 
+## Documentation
+
+The [H9 docs](https://www.pandastrike.com/open-source/haiku9/) cover many details not addressed in this README.
+
 ## Installation
 
 ```shell
