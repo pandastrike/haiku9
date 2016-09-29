@@ -3,7 +3,7 @@ FROM node:6
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 
-EXPOSE 8081
+EXPOSE 1337
 
 ENV PATH="node_modules/.bin:$PATH"
 

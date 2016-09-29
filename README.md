@@ -71,7 +71,7 @@ h9 serve
 ### Docker
 
 ```shell
-docker run -it --rm -v "$PWD":/usr/src/app -p 8081:8081 h9 serve
+docker run -it --rm -v "$PWD":/usr/src/app -p 1337:1337 h9 serve
 ```
 
 NOTE: To install your app's npm modules via the `h9` Docker image:
