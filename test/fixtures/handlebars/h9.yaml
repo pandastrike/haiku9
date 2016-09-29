@@ -1,0 +1,4 @@
+source: "www"
+target: "build"
+server:
+  port: 8080

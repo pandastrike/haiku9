@@ -3,7 +3,7 @@ require "../../src/index"
 {join} = require "path"
 assert = require "assert"
 childProcess = require 'child_process'
-{shell, call, exists, chdir, promise} = require "fairmont"
+{shell, call, exists, chdir, read, promise} = require "fairmont"
 
 HOME_DIR = join __dirname, "..", ".."
 BASE_FIXTURE_DIR = join HOME_DIR, "test", "fixtures"
@@ -52,6 +52,18 @@ assertBuilt = (fixture, expectedFile) ->
 
     assert built, "File #{expectedFile} not built"
 
+assertContent = (fixture, expectedFile, expectedContent) ->
+  call ->
+    file = join fixtureDir(fixture), "build", expectedFile
+    contents = yield read file
+    assert contents.match(expectedContent)
+
+assertNoContent = (fixture, expectedFile, expectedContent) ->
+  call ->
+    file = join fixtureDir(fixture), "build", expectedFile
+    contents = yield read file
+    assert not contents.match(expectedContent)
+
 buildAndVerify = (fixture, expectedFile) ->
   call ->
     yield build fixture
@@ -61,4 +73,6 @@ module.exports =
   build: build
   isBuilt: isBuilt
   assertBuilt: assertBuilt
+  assertContent: assertContent
+  assertNoContent: assertNoContent
   buildAndVerify: buildAndVerify
