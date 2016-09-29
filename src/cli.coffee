@@ -5,6 +5,15 @@ program = require "commander"
 require "./index"
 {run} = require "panda-9000"
 
+# exit on ctrl-c, related signals
+# https://github.com/pandastrike/haiku9/issues/88
+process.on 'SIGHUP',  ()-> process.exit()
+process.on 'SIGINT',  ()-> process.exit()
+process.on 'SIGQUIT', ()-> process.exit()
+process.on 'SIGABRT', ()-> process.exit()
+process.on 'SIGTERM', ()-> process.exit()
+
+
 call ->
 
   {version} = JSON.parse yield read join __dirname, "..", "package.json"
