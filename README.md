@@ -22,9 +22,21 @@ The [H9 docs](https://www.pandastrike.com/open-source/haiku9/) cover many detail
 
 ## Installation
 
+### Local
+
 ```shell
-$ npm install -g haiku9
+npm install -g haiku9
 ```
+
+### Docker
+
+```shell
+git clone https://github.com/pandastrike/haiku9.git
+cd haiku9
+docker build -t h9 .
+```
+
+NOTE: Once we publish to Docker Hub, you will be able use `docker pull pandastrike/h9` instead of the above clone/build.
 
 ## Configuration
 
@@ -50,16 +62,62 @@ At the root of your site, create a `h9.yaml` file. That should have the followin
 
 During the development, you'll want to run a simple static server.
 
+### Local
+
 ```shell
-$ h9 serve
+h9 serve
+```
+
+### Docker
+
+```shell
+docker run -it --rm -v "$PWD":/usr/src/app -p 1337:1337 h9 serve
+```
+
+NOTE: To install your app's npm modules via the `h9` Docker image:
+
+```shell
+docker run -it --rm -v "$PWD":/usr/src/app --entrypoint="npm" haiku9 install
 ```
 
 ## Compilation
 
 Once you're ready, you want to compile all your assets.
 
+### Local
+
 ```shell
-$ h9 build
+h9 build
+```
+
+### Docker
+
+```shell
+docker run -it --rm -v "$PWD":/usr/src/app h9 build
+```
+
+## Publishing
+
+(See the [H9 Publish Docs](https://www.pandastrike.com/open-source/haiku9/publish/) for more information).
+
+To publish your compiled site to AWS, first confirm that your AWS credentials are defined in `~/.aws/credentials`:
+
+  [default]
+  aws_access_key_id=AKIAIOSFODNN7EXAMPLE
+  aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+
+Next, push to AWS using one of the approaches below:
+
+### Local
+
+```shell
+h9 publish <environment>
+```
+
+### Docker
+
+```shell
+docker run -it --rm -v "$PWD":/usr/src/app -v ~/.aws:/root/.aws h9 publish <environment>
 ```
 
 ## Rendering Rules
