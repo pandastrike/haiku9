@@ -1,3 +1,6 @@
+# docker build . -t pandastrike/haiku9
+# docker tag pandastrike/haiku9 pandastrike/haiku9:1.1.0-beta-15
+# docker push pandastrike/haiku9
 FROM node:6
 
 RUN mkdir -p /usr/src/app

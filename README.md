@@ -31,12 +31,9 @@ npm install -g haiku9
 ### Docker
 
 ```shell
-git clone https://github.com/pandastrike/haiku9.git
-cd haiku9
-docker build -t h9 .
+docker pull pandastrike/haiku9
+docker tag pandastrike/haiku9 h9
 ```
-
-NOTE: Once we publish to Docker Hub, you will be able use `docker pull pandastrike/h9` instead of the above clone/build.
 
 ## Configuration
 
@@ -77,7 +74,7 @@ docker run -it --rm -v "$PWD":/usr/src/app -p 1337:1337 h9 serve
 NOTE: To install your app's npm modules via the `h9` Docker image:
 
 ```shell
-docker run -it --rm -v "$PWD":/usr/src/app --entrypoint="npm" haiku9 install
+docker run -it --rm -v "$PWD":/usr/src/app --entrypoint="npm" h9 install
 ```
 
 ## Compilation
