@@ -83,15 +83,29 @@ module.exports = (config, s3) ->
     try
       for {file, hash} in ulist
         continue if yield isTooLarge join(config.target, file)
+
         params =
           Bucket: config.aws.hostnames[0]
-          Key: file.split(".html")[0]   # Strip ".html" extension for S3 key.
+          Key: file
           ACL: "public-read"
           ContentType: mime.lookup file
           ContentMD5: new Buffer(hash, "hex").toString('base64')
           Body: createReadStream join config.target, file
 
         yield s3.putObject params
+
+        if ".html" in file
+          # For HTML files, also publish a copy that lacks the file extension.
+          params =
+            Bucket: config.aws.hostnames[0]
+            Key: file.split(".html")[0]
+            ACL: "public-read"
+            ContentType: mime.lookup file
+            ContentMD5: new Buffer(hash, "hex").toString('base64')
+            Body: createReadStream join config.target, file
+
+          yield s3.putObject params
+          
         printProgress()
     catch e
       console.error "Failed to upload object.", e
