@@ -94,7 +94,7 @@ module.exports = (config, s3) ->
 
         yield s3.putObject params
 
-        if ".html" in file
+        if file.indexOf(".html") > -1
           # For HTML files, also publish a copy that lacks the file extension.
           params =
             Bucket: config.aws.hostnames[0]
@@ -105,7 +105,7 @@ module.exports = (config, s3) ->
             Body: createReadStream join config.target, file
 
           yield s3.putObject params
-          
+
         printProgress()
     catch e
       console.error "Failed to upload object.", e
