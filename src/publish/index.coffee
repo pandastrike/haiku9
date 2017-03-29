@@ -2,7 +2,7 @@
 {async, empty} = require "fairmont"
 {define} = require "panda-9000"
 
-define "publish", async (env) ->
+define "publish", async (env, options) ->
   config = require("../configuration/publish")(env)
 
   bucket = yield require("./bucket")(config)
@@ -11,7 +11,7 @@ define "publish", async (env) ->
   remoteFiles = yield bucket.scan()
   localFiles = yield local.scan()
 
-  actions = local.reconcile localFiles, remoteFiles
+  actions = local.reconcile localFiles, remoteFiles, options.force
   yield bucket.sync actions
 
   yield bucket.web.enable()

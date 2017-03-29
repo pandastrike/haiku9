@@ -34,14 +34,15 @@ call ->
   program
     .command('publish [env]')
     .description('deploy Website assets from "target" to AWS infrastructure')
+    .option("-f, --force", "force the upload of all files, ignoring cloud sync comparisons")
     .action(
-      (env)->
+      (env, options)->
         if !env
           console.error "No environment has been provided."
           console.error "Usage: h9 publish <environment>"
           process.exit 1
 
-        run "publish", [env]
+        run "publish", [env, options]
     )
 
 

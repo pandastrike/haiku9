@@ -51,6 +51,7 @@ module.exports = (config, route53) ->
         # Escape if there's nothing to change.
         desired = addUpsert(source, hostname).ResourceRecordSet
         current = record[0]
+        delete current.ResourceRecords if empty current.ResourceRecords
         return null if deepEqual desired, current
 
       # Add an update to the DNS changeList.
