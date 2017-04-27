@@ -6,7 +6,7 @@ glob} = require "fairmont"
 {define, context, jade} = require "panda-9000"
 {save, render} = Asset = require "../asset"
 Data = require "../data"
-{pathWithUnderscore} = require "../utils"
+{pathWithUnderscore, isBowerComponentsPath} = require "../utils"
 
 type = Type.define Asset
 
@@ -15,6 +15,7 @@ define "survey/jade", ["data"], ->
   go [
     glob "**/*.jade", source
     reject pathWithUnderscore
+    reject isBowerComponentsPath
     map context source
     tee (context) -> Data.augment context
     tee ({target}) -> target.extension = ".html"
