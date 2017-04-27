@@ -10,13 +10,16 @@ browserify = require "browserify"
 coffeeify = require "coffeeify"
 {save, render} = Asset = require "../asset"
 
+{isNodeModulesPath, isBowerComponentsPath} = require "../utils"
+
 type = Type.define Asset
 
 define "survey/bundle", ->
   {source} = require "../configuration"
   go [
     glob "**/package.json", source
-    reject isMatch /node_modules/
+    reject isNodeModulesPath
+    reject isBowerComponentsPath
     map context source
     tee ({target}) -> target.extension = ".js"
     map (context) -> include (Type.create type), context
