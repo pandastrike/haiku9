@@ -40,6 +40,16 @@ properties:
             description: Pagination template
             type: string
 
+  exclusions:
+    description: >
+      List of paths to exlude from the S3 synchronization process.  Haiku
+      will recursively exlcude all descedents of a specified path.
+    type: array
+    minItems: 1
+    uniqueItems: true
+    items:
+      type: string
+
   aws:
     description:
       Configuration for h9 to coordinate the AWS deployment of the static site.
