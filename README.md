@@ -43,6 +43,8 @@ At the root of your site, create a `h9.yaml` file. That should have the followin
 
 - `target` — the path to the directory where you want to put the compiled assets
 
+- `exclusions` (Array) - List of paths to exlude from the S3 synchronization process. Haiku will recursively exlcude all descedents of a specified path.
+
 - `server` — the server configuration (see below)
 
 - `blog` — the blog configuration (see below)
@@ -50,6 +52,10 @@ At the root of your site, create a `h9.yaml` file. That should have the followin
 ### Server Configuration
 
 - `port` — the port the server runs on
+
+### Exclusions Configuration
+
+- String - the s3 path(s) you wish to excluse from the synch process
 
 ### Blog Configuration
 
@@ -121,9 +127,21 @@ docker run -it --rm -v "$PWD":/usr/src/app -v ~/.aws:/root/.aws h9 publish <envi
 
 - For Jade and Stylus, anything with an underscore is skipped.
 
+- Any files inside a folder named `node_modules` or `bower_components` are skipped.
+
 - YAML files are added to the context (locals) available in Jade.
 
 - Markdown files look for a Jade `_layout` file to use as a rendering context.
+
+- You can include inline CoffeeScript and Stylus (mostly for Web Components) as shown below:
+
+```
+style(rel="stylesheet")
+   include:stylus _src/styles.styl
+
+script(type="text/javascript")
+   include:coffee-script _src/index.coffee
+```
 
 ## More on the Rendering Context
 
