@@ -3,8 +3,13 @@
 # object needs to be updated.
 
 mime = require "mime"
-{async, lsR, collect, flow, map, pull, read, md5} = require "fairmont"
+{async, lsR, collect, flow, map, pull, read, md5, curry} = require "fairmont"
 {target} = require "../configuration"
+
+exclude = curry (exclusions, path) ->
+  for e in exclusions
+    return true if path.match new RegExp "^#{e}.*$"
+  return false
 
 module.exports =
 
@@ -30,13 +35,18 @@ module.exports =
     table
 
   # Produce an array of tasks to make the S3 bucket sync with the local files.
-  reconcile: (local, remote, force) ->
+  reconcile: (local, remote, {exclusions, force}) ->
     # Files need to be uploaded or deleted from S3.
     dlist = []
     ulist = []
 
     # Ignore keys that signify a directory, instead of a flat data object.
     delete remote[k] for k, v of remote when k.match /.*\/$/
+
+    # Ignore exluded files.
+    if exclusions
+      isExcluded = exclude exclusions
+      delete remote[k] for k, v of remote when isExcluded k
 
     # Queue for deletion remote files that do not exist locally.
     dlist.push k for k, v of remote when !local[k] && !local[k + ".html"]

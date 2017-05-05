@@ -11,7 +11,8 @@ define "publish", async (env, options) ->
   remoteFiles = yield bucket.scan()
   localFiles = yield local.scan()
 
-  actions = local.reconcile localFiles, remoteFiles, options.force
+  config.force = options.force
+  actions = local.reconcile localFiles, remoteFiles, config
   yield bucket.sync actions
 
   yield bucket.web.enable()
