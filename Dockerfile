@@ -1,5 +1,5 @@
 # docker build . -t pandastrike/haiku9
-# docker tag pandastrike/haiku9 pandastrike/haiku9:1.1.0-beta-15
+# docker tag pandastrike/haiku9 pandastrike/haiku9:1.1.0-beta-20
 # docker push pandastrike/haiku9
 FROM node:6
 
@@ -10,6 +10,4 @@ EXPOSE 1337
 
 ENV PATH="node_modules/.bin:$PATH"
 
-ENTRYPOINT ["node_modules/.bin/h9"]
-
-CMD ["--help"]
+RUN npm install -g haiku9@1.1.0-beta-20

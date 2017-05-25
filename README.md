@@ -74,13 +74,13 @@ h9 serve
 ### Docker
 
 ```shell
-docker run -it --rm -v "$PWD":/usr/src/app -p 1337:1337 h9 serve
+docker run -it --rm -v "$PWD":/usr/src/app -p 1337:1337 haiku9 h9 serve
 ```
 
 NOTE: To install your app's npm modules via the `h9` Docker image:
 
 ```shell
-docker run -it --rm -v "$PWD":/usr/src/app --entrypoint="npm" h9 install
+docker run -it --rm -v "$PWD":/usr/src/app haiku9 npm install
 ```
 
 ## Compilation
