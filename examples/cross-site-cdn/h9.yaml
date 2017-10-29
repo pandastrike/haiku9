@@ -1,0 +1,40 @@
+source: "www"
+target: "build"
+server:
+  port: 8080
+aws:
+  domain: panda-demo.com
+  region: us-west-2
+  site:
+    index: index
+    error: 404
+  cors: default
+
+
+  environments:
+    staging:
+      hostnames:
+        - www-staging
+        - staging
+
+    production:
+      hostnames:
+        - www
+      apex: secondary
+      cache:
+        expires: 1800 # 30 minutes
+        ssl: true
+        priceClass: 100
+        headers:
+          - Origin
+          - Access-Control-Request-Method
+          - Access-Control-Request-Headers
+
+    nonSSL:
+      hostnames:
+        - david2
+        - david2-beta
+      cache:
+        expires: 1800 # 30 minutes
+        ssl: false
+        priceClass: 100
