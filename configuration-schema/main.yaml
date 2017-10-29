@@ -98,6 +98,8 @@ properties:
               - type: string
               - type: integer
 
+      cors: {$ref: "#/definitions/cors"}
+
       environments:
         description:
           An environment is a collection of S3 buckets, DNS records, and

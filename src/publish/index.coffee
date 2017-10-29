@@ -1,8 +1,8 @@
 # Publish pushes the site to the AWS cloud platform.
 {async, empty} = require "fairmont"
-{define} = require "panda-9000"
+{define, run} = require "panda-9000"
 
-define "publish", async (env, options) ->
+define "_publish", async (env, options) ->
   config = require("../configuration/publish")(env)
 
   bucket = yield require("./bucket")(config)
@@ -24,3 +24,9 @@ define "publish", async (env, options) ->
 
   changeID = yield bucket.dns.set distributions
   yield bucket.dns.sync changeID
+
+define "publish", ["build"], (env, options) ->
+  run "_publish", [env, options]
+
+define "nobuildPublish", (env, options) ->
+  run "_publish", [env, options]

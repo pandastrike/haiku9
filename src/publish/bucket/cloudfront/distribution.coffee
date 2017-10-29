@@ -50,6 +50,22 @@ module.exports = async (config, cf) ->
         MinimumProtocolVersion: 'SSLv3'
         CertificateSource: 'cloudfront'
 
+    setHeaderCacheConfiguration = ->
+      {headers} = config.aws.cache
+
+      if !headers
+        # The field is unspecifed, so we need to return 0 quantity.  Default forwarding with no caching.
+        {Quantity: 0}
+      else if "*" in headers
+        # Wildcard specificaton.  Everything gets forwarded with no caching.
+        if headers.length == 1
+          {Quantity: 1, Items: ["*"]}
+        else
+          throw new Error "Incorrect header specificaton.  Wildcard cannot be used with other named headers."
+      else
+        # Named, finite headers specified.  These get forwarded AND cached by CloudFront.
+        {Quantity: headers.length, Items: headers}
+
     buildConfiguration = async (name) ->
       {ssl, priceClass} = config.aws.cache
       protocolPolicy = if ssl then "redirect-to-https" else "allow-all"
@@ -86,8 +102,7 @@ module.exports = async (config, cf) ->
           QueryString: true
           Cookies:
             Forward: "all"
-          Headers:
-            Quantity: 0
+          Headers: setHeaderCacheConfiguration()
         MinTTL: 0
         MaxTTL: config.aws.cache.expires || 60
         TrustedSigners:
@@ -95,11 +110,11 @@ module.exports = async (config, cf) ->
           Quantity: 0
         ViewerProtocolPolicy: protocolPolicy
         AllowedMethods:
-          Items: [ "GET", "HEAD" ]
-          Quantity: 2
+          Items: [ "GET", "HEAD", "OPTIONS", "PUT", "PATCH", "POST", "DELETE" ]
+          Quantity: 7
           CachedMethods:
-            Items: [ "GET", "HEAD" ]
-            Quantity: 2
+            Items: [ "GET", "HEAD", "OPTIONS" ]
+            Quantity: 3
         Compress: false
 
 
@@ -135,6 +150,7 @@ module.exports = async (config, cf) ->
       distro.PriceClass = "PriceClass_" + (config.aws.cache.priceClass || "100")
       distro.DefaultCacheBehavior.MaxTTL = config.aws.cache.expires || 60
       distro.ViewerCertificate = yield setViewerCertificate()
+      distro.DefaultCacheBehavior.Headers = setHeaderCacheConfiguration()
 
       if deepEqual distro, Distribution.DistributionConfig
         Distribution

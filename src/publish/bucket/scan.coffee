@@ -7,13 +7,11 @@ module.exports = (config, s3) ->
   async ->
     # Search your buckets for all hostnames. If they don't exist, make them.
     console.log "Scanning S3 bucket."
-    exists = (bucket.establish name for name in config.aws.hostnames)
+    exists = (bucket.establish(name, config.aws.cors) for name in config.aws.hostnames)
     yield collect pull exists
 
+    # If the primary bucket already existed, scan its objects and their md5 hashes.
     if exists[0]
-      # The main buckets already exists.  Scan for objects and their md5 hashes.
-      yield bucket.setACL config.aws.hostnames[0]
       yield bucket.list config.aws.hostnames[0], {}
     else
-      # A new bucket was created, return an empty object
-      {}
+      {}  # The primary bucket is a new and therefore empty.
