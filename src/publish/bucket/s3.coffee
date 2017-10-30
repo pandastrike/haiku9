@@ -1,8 +1,8 @@
-{async, sleep} = require "fairmont"
+{async, sleep, isArray} = require "fairmont"
 
 module.exports = (s3) ->
 
-  establish = async (name) ->
+  establish = async (name, cors) ->
     try
       exists = yield s3.headBucket Bucket: name
     catch e
@@ -21,12 +21,20 @@ module.exports = (s3) ->
           console.error "Unexpected reply from AWS", e
           throw e
 
-    return true if exists
+    # If the bucket already exists: ensure it is properly configured.
+    if exists
+      yield setACL name
+      yield setCORS name, cors if cors
+      return true
 
-    # Create a new, empty S3 bucket.
+    # If the bucket does not exist: create a new, empty S3 bucket.
+    # There is a grace period to wait for bucket to be available to API.
+    # TODO: Fix by using CloudFormation to do setup instead.
     try
       yield s3.createBucket {Bucket: name, ACL: "public-read"}
       yield sleep 15000
+      yield setCORS name, cors if cors
+      return false
     catch e
       console.error "Failed to establish bucket.", e
       throw new Error()
@@ -70,4 +78,37 @@ module.exports = (s3) ->
       throw new Error()
 
 
-  {establish, list, setACL}
+  buildRule = (c) ->
+    {allowedHeaders = ["*"], allowedMethods = ["GET"], allowedOrigins = ["*"], exposedHeaders = [""]} = c
+    maxAge = c.maxAge if c.maxAge? # This may be configured to zero for no-cache
+
+    rule =
+      AllowedHeaders: allowedHeaders
+      AllowedMethods: allowedMethods
+      AllowedOrigins: allowedOrigins
+      ExposeHeaders: exposedHeaders
+
+    rule.MaxAgeSeconds = maxAge if maxAge?
+    rule
+
+  # Set Cross Origin Resource Sharing (CORS) configuration for the whole bucket.
+  setCORS = async (name, config) ->
+    if isArray config
+      rules = (buildRule c for c in config)
+    else
+      rules = [buildRule config]
+
+    try
+      yield s3.putBucketCors {
+        Bucket: name,
+        CORSConfiguration: {
+         CORSRules: rules
+        },
+        ContentMD5: ""
+      }
+    catch e
+      console.error "Unexpected response while setting bucket CORS configuration.", e
+      throw new Error()
+
+
+  {establish, list, setACL, setCORS}

@@ -6,10 +6,6 @@
 module.exports = (config, env) ->
   out = config
   {aws} = config
-  out.aws = {
-    region: aws.region
-    site: aws.site
-  }
 
   # Pull config data for the requested environment.
   env = aws.environments[env]

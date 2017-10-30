@@ -3,6 +3,6 @@ logs/
 *.log
 node_modules/
 lib/
-examples/simple-site/build/*
+examples/**/build/*
 !examples/simple-site/build
 test/fixtures/**/build/*

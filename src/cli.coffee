@@ -35,6 +35,7 @@ call ->
     .command('publish [env]')
     .description('deploy Website assets from "target" to AWS infrastructure')
     .option("-f, --force", "force the upload of all files, ignoring cloud sync comparisons")
+    .option("--nobuild", "publish the repository without issuing a build job beforehand")
     .action(
       (env, options)->
         if !env
@@ -42,7 +43,10 @@ call ->
           console.error "Usage: h9 publish <environment>"
           process.exit 1
 
-        run "publish", [env, options]
+        if options.nobuild
+          run "nobuildPublish", [env, options]
+        else
+          run "publish", [env, options]
     )
 
 
