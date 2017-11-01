@@ -37,12 +37,13 @@ module.exports = async (config, cf) ->
       name + ".s3-website-" + config.aws.region + ".amazonaws.com"
 
     setViewerCertificate = async ->
-      if config.aws.cache.ssl
+      {ssl, protocol} = config.aws.cache
+      if ssl
         cert = yield acm.fetch config.aws.hostnames[0]
 
         ACMCertificateArn: cert
         SSLSupportMethod: 'sni-only'
-        MinimumProtocolVersion: 'TLSv1'
+        MinimumProtocolVersion: protocol || 'TLSv1.2_2018'
         Certificate: cert
         CertificateSource: 'acm'
       else
@@ -53,8 +54,9 @@ module.exports = async (config, cf) ->
     setHeaderCacheConfiguration = ->
       {headers} = config.aws.cache
 
-      if !headers
-        # The field is unspecifed, so we need to return 0 quantity.  Default forwarding with no caching.
+      if !headers || headers.length == 0
+        # The field is unspecifed or declared explicitly to include no headers,
+        # so we need to return 0 quantity.  Default forwarding with no caching.
         {Quantity: 0}
       else if "*" in headers
         # Wildcard specificaton.  Everything gets forwarded with no caching.
@@ -66,17 +68,30 @@ module.exports = async (config, cf) ->
         # Named, finite headers specified.  These get forwarded AND cached by CloudFront.
         {Quantity: headers.length, Items: headers}
 
+
+    # This method takes into consideration the input configuration and sets smart defaults for CloudFront configuration
+    # to fill the gaps where the user has no opinon set.
+    applyDefaults = async (name) ->
+      {ssl, priceClass, httpVersion} = config.aws.cache
+
+      protocolPolicy: if ssl then "redirect-to-https" else "allow-all"
+      priceClass: priceClass || "100"
+      originID: "Haiku9-" + regularlyQualify name
+      cert: yield setViewerCertificate()
+      headers: setHeaderCacheConfiguration()
+      expires: config.aws.cache.expires || 60
+      httpVersion: httpVersion || "http2"
+
     buildConfiguration = async (name) ->
-      {ssl, priceClass} = config.aws.cache
-      protocolPolicy = if ssl then "redirect-to-https" else "allow-all"
-      priceClass ||= "100"
-      originID = "Haiku9-" + regularlyQualify name
+      distro = async applyDefaults name
 
       # Fill out configuration for CloudFront distribution... it's a doozy.
       CallerReference: "Haiku " + randomKey 32
       Comment: "Origin is S3 bucket. Setup by Haiku9."
       Enabled: true
-      PriceClass: "PriceClass_" + priceClass
+      PriceClass: "PriceClass_" + distro.priceClass
+      ViewerCertificate: distro.viewerCertificate
+      HttpVersion: distro.httpVersion
       DefaultRootObject: ""
 
       Aliases:
@@ -86,7 +101,7 @@ module.exports = async (config, cf) ->
       Origins:
         Quantity: 1
         Items: [
-          Id: originID
+          Id: distro.originID
           DomainName: buildSource name
           CustomOriginConfig:
             HTTPPort: 80
@@ -94,17 +109,17 @@ module.exports = async (config, cf) ->
             OriginProtocolPolicy: "http-only"
         ]
 
-      ViewerCertificate: yield setViewerCertificate()
+
 
       DefaultCacheBehavior:
-        TargetOriginId: originID
+        TargetOriginId: distro.originID
         ForwardedValues:
           QueryString: true
           Cookies:
             Forward: "all"
           Headers: setHeaderCacheConfiguration()
         MinTTL: 0
-        MaxTTL: config.aws.cache.expires || 60
+        MaxTTL: distro.expires
         TrustedSigners:
           Enabled: false
           Quantity: 0
@@ -144,15 +159,8 @@ module.exports = async (config, cf) ->
         throw new Error()
 
 
-    confirmDistributionConfig = async ({ETag, Distribution}) ->
-      distro = clone Distribution.DistributionConfig
-
-      distro.PriceClass = "PriceClass_" + (config.aws.cache.priceClass || "100")
-      distro.DefaultCacheBehavior.MaxTTL = config.aws.cache.expires || 60
-      distro.ViewerCertificate = yield setViewerCertificate()
-      distro.DefaultCacheBehavior.Headers = setHeaderCacheConfiguration()
-
-      if deepEqual distro, Distribution.DistributionConfig
+    confirmDistributionConfig = async (name, {ETag, Distribution}) ->
+      if deepEqual (buildConfiguration name), Distribution.DistributionConfig
         Distribution
       else
         updateDistribution ETag, Distribution
@@ -184,7 +192,7 @@ module.exports = async (config, cf) ->
 
       # Confirm that the distribution is correctly configured. Return it
       # if true, update it if false and return the new object
-      yield confirmDistributionConfig current
+      yield confirmDistributionConfig name, current
 
     catch e
       console.error "Unexpected response while prepping CloudFront distro", e

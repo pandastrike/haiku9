@@ -42,15 +42,36 @@ environment:
       type: object
       additionalProperties: false
       properties:
+        httpVersion:
+          description:
+            Determines the network protocol to serve content to clients. HTTP/2
+            is newer and more awesome, so when this value is omitted, Haiku
+            deafults to that protocol.
+          type: string
+          enum: [ "http1.1", "http2" ]
+
         ssl:
-          description: Sets whether CloudFront should use SSL when serving.
+          description:
+            Determines if CloudFront should use SSL when serving.  When this is
+            omitted, Haiku defaults to false. Don't forget to have your SSL cert
+            sorted before you set it to true.
           type: boolean
+
+        protocol:
+          description:
+            Sets the TLS protocol version to use when setting up your site to
+            serve over HTTPS.  Higher versions are not supported by older
+            clients, but they leverage more robust cryptography and signalling.
+            When this is omitted, Haiku defaults to vTLSv1.2_2018.
+          type: string
+          enum: [ "SSLv3", TLSv1", "TLSv1_2016", "TLSv1.1_2016", "TLSv1.2_2018" ]
 
         expires:
           description:
             The maximum amount of time, in seconds, that an object stays
             cached in the edge server before additional requests are forwarded
-            to the S3 bucket to check for updates.
+            to the S3 bucket to check for updates.  When this value is omitted,
+            Haiku defaults to 60 seconds.
           type: integer
           minimum: 0
           maximum: 3153600000
@@ -60,7 +81,8 @@ environment:
             Sets the extent to which content is cached on CloudFronts edge
             servers.  By limiting to edge servers in cheaper locations
             throughout the world, you can lower your expenses at the cost of
-            less coverage.  Defaults to 100, which is cheapest.
+            less coverage.  When this value is omitted, Haiku defaults to 100,
+            which is cheapest, but comes with the smallest coverage area.
           anyOf:
             - type: string
               enum: [ "100", "200", "All"]
@@ -75,7 +97,6 @@ environment:
             default headers, but not cache them.  You may specify a wildcard,
             which forwards all headers, but it cannot leverage caching.
           type: array
-          minItems: 1
           items:
             type: string
             minLength: 1
@@ -94,10 +115,12 @@ cors:
 
 corsRuleDefault:
   description:
-    This defines the CORS rule when specifying the default, permissive configuration.
-    It allows GET requests from any domain, using any headers, and exposes all headers in the response.
+    This defines the CORS rule when specifying an easy, permissive configuration.  This circumvents
+    the browser's enforcement of the CORS mechanism by allowing GET requests from any domain,
+    using any headers.  This is good for getting started, but consider setting this to something
+    more specific as your project matures.
   type: string
-  enum: [ default ]
+  enum: [ permissive, wildstyle, fuck-it, fuck-this-thing-in-particular ]
 
 corsRuleSingle:
   description:
