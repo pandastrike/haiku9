@@ -27,7 +27,7 @@ module.exports = (config, route53) ->
         Type: "A"
         AliasTarget:
           HostedZoneId: HostedZoneId
-          DNSName: source
+          DNSName: fullyQualify source
           EvaluateTargetHealth: false
 
     # Determine if the AWS user owns the requested URL as a public hosted zone

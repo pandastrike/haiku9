@@ -1,8 +1,7 @@
 {async, sleep,
 collect, where, empty, cat,
-clone} = require "fairmont"
+clone, deepEqual} = require "fairmont"
 {randomKey} = require "key-forge"
-{deepEqual} = require "assert"
 
 # TODO add configuration for cloudfront restrictions.
 module.exports = async (config, cf) ->
@@ -58,7 +57,7 @@ module.exports = async (config, cf) ->
       if !headers || headers.length == 0
         # The field is unspecifed or declared explicitly to include no headers,
         # so we need to return 0 quantity.  Default forwarding with no caching.
-        {Quantity: 0}
+        {Quantity: 0, Items: []}
       else if "*" in headers
         # Wildcard specificaton.  Everything gets forwarded with no caching.
         if headers.length == 1
@@ -76,6 +75,7 @@ module.exports = async (config, cf) ->
         DomainName: buildSource name
         CustomHeaders:
           Quantity: 0
+          Items: []
         OriginPath: ""
         S3OriginConfig:
           OriginAccessIdentity: ""
@@ -135,6 +135,7 @@ module.exports = async (config, cf) ->
         TrustedSigners:
           Enabled: false
           Quantity: 0
+          Items: []
         AllowedMethods:
           Items: [ "GET", "HEAD", "OPTIONS", "PUT", "PATCH", "POST", "DELETE" ]
           Quantity: 7
@@ -143,6 +144,7 @@ module.exports = async (config, cf) ->
             Quantity: 3
         LambdaFunctionAssociations:
           Quantity: 0
+          Items: []
 
 
       return c
@@ -176,9 +178,27 @@ module.exports = async (config, cf) ->
         throw new Error()
 
 
+    # This recursive helper smooths out arrays within nested objects so that we
+    # can safely apply a deepEqual to compare current and new configurations.
+    deepSort = (o) ->
+      if Array.isArray o
+        o.sort()
+      else if typeof o == "object"
+        n = {}
+        n[k] = deepSort v for k,v of o
+        n
+      else
+        o
+
+    # Compare the current configuration we fetched from AWS to our desired end
+    # state.  Because the configuration is complex and filled with optional fields,
+    # we designate the desired configuration as a transformation on the current.
+    # If this causes changes, then we need to issue a time consuming update.
     confirmDistributionConfig = async (name, {ETag, Distribution}) ->
-      current = Distribution.DistributionConfig
-      if deepEqual current, yield buildConfiguration(name, current)
+      current = deepSort Distribution.DistributionConfig
+      newconfig = deepSort yield buildConfiguration name, Object.assign({}, current)
+
+      if deepEqual current, newconfig
         Distribution
       else
         updateDistribution ETag, Distribution

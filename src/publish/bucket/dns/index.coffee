@@ -8,8 +8,9 @@ module.exports = (config, route53) ->
   dns = require("./dns")(config, route53)
 
   set: async (distributions) ->
-    console.log "Establishing DNS record for site."
-    console.log "Direct S3 Serving.  HTTP-Only." if !distributions
+    console.log "\n====="
+    console.log "-- Establishing DNS record for site."
+    console.log "-- Direct S3 Serving.  HTTP-Only." if !distributions
     params = yield dns.build distributions
 
     try
@@ -23,9 +24,9 @@ module.exports = (config, route53) ->
 
   sync: async (id) ->
     if id
-      console.log "Waiting for DNS records to synchronize."
+      console.log "-- Waiting for DNS records to synchronize."
     else
-      console.log "DNS up to date.  Skipping."
+      console.log "-- DNS up to date.  Skipping."
       return true
 
     try

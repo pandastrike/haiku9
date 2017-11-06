@@ -15,7 +15,7 @@ module.exports =
 
   # Produce a table of filenames and their md5 hashes.
   scan: async ->
-    console.log "Scanning local repo."
+    console.log "-- Scanning local repo."
     table = {}
     paths = yield lsR target
     hashes = yield collect flow [

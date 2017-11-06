@@ -27,7 +27,7 @@ module.exports = async (config, cf) ->
         """
 
       yield cf.sync distro for distro in distributions
-      console.log "CloudFront distribution synchronization#{pluralString} complete."
+      console.log "CloudFront distribution synchronization#{pluralString}complete."
 
       if config.aws.cache.expires != 0 && cf.needsInvalidation changes
         console.log "Invalidating CDN cache. This may take several minutes."
@@ -37,3 +37,4 @@ module.exports = async (config, cf) ->
         for i in [0...distributions.length]
           yield cf.syncInvalidation distributions[i], invalidations[i]
       console.log "CDN cache validation check complete."
+      console.log "=====\n"
