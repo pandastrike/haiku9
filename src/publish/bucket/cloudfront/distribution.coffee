@@ -1,7 +1,8 @@
 {async, sleep,
 collect, where, empty, cat,
-clone, deepEqual} = require "fairmont"
+clone} = require "fairmont"
 {randomKey} = require "key-forge"
+{deepEqual} = require "assert"
 
 # TODO add configuration for cloudfront restrictions.
 module.exports = async (config, cf) ->
@@ -12,9 +13,11 @@ module.exports = async (config, cf) ->
     (yield require("../../../aws")("us-east-1")).acm
   )
 
+  needsInvalidation = ({dlist, ulist}) -> !empty cat dlist, ulist
+
   # Invalidate distribution cache.  Because we are charged per path we specify,
   # it's cheapest to just invalidate everything unless nothing changed.
-  invalidate = async (distribution, {dlist, ulist}) ->
+  invalidate = async (distribution) ->
     createInvalidation = async ->
       yield cf.createInvalidation
         DistributionId: distribution.Id
@@ -25,7 +28,6 @@ module.exports = async (config, cf) ->
             Items: ["/*"]
 
     try
-      return null if empty cat dlist, ulist
       {Invalidation} = yield createInvalidation()
     catch e
       console.error "Unexpected response while setting invalidation.", e
@@ -33,8 +35,7 @@ module.exports = async (config, cf) ->
 
 
   set = async (name) ->
-    buildSource = (name) ->
-      name + ".s3-website-" + config.aws.region + ".amazonaws.com"
+    buildSource = (name) -> name + ".s3.amazonaws.com"
 
     setViewerCertificate = async ->
       {ssl, protocol} = config.aws.cache
@@ -68,6 +69,18 @@ module.exports = async (config, cf) ->
         # Named, finite headers specified.  These get forwarded AND cached by CloudFront.
         {Quantity: headers.length, Items: headers}
 
+    buildOrigins = (name, originID) ->
+      Quantity: 1
+      Items: [
+        Id: originID
+        DomainName: buildSource name
+        CustomHeaders:
+          Quantity: 0
+        OriginPath: ""
+        S3OriginConfig:
+          OriginAccessIdentity: ""
+      ]
+
 
     # This method takes into consideration the input configuration and sets smart defaults for CloudFront configuration
     # to fill the gaps where the user has no opinon set.
@@ -82,59 +95,62 @@ module.exports = async (config, cf) ->
       expires: config.aws.cache.expires || 60
       httpVersion: httpVersion || "http2"
 
-    buildConfiguration = async (name) ->
-      distro = async applyDefaults name
+    # This helper constructs a CloudFront distribution configuration.  It optionally
+    # accepts a pre-existing configuration to faciliate a deepEqual comparison for
+    # update detection.
+    buildConfiguration = async (name, c={}) ->
+      distro = yield applyDefaults name
 
       # Fill out configuration for CloudFront distribution... it's a doozy.
-      CallerReference: "Haiku " + randomKey 32
-      Comment: "Origin is S3 bucket. Setup by Haiku9."
-      Enabled: true
-      PriceClass: "PriceClass_" + distro.priceClass
-      ViewerCertificate: distro.viewerCertificate
-      HttpVersion: distro.httpVersion
-      DefaultRootObject: ""
+      c.CallerReference = c.CallerReference || "Haiku " + randomKey 32
+      c.Comment = "Origin is S3 bucket. Setup by Haiku9."
+      c.Enabled = true
+      c.PriceClass = "PriceClass_" + distro.priceClass
+      c.ViewerCertificate = distro.cert
+      c.HttpVersion = distro.httpVersion
+      c.DefaultRootObject = ""
 
-      Aliases:
+      c.Aliases =
         Quantity: 1
         Items: [ name ]
 
-      Origins:
-        Quantity: 1
-        Items: [
-          Id: distro.originID
-          DomainName: buildSource name
-          CustomOriginConfig:
-            HTTPPort: 80
-            HTTPSPort: 443
-            OriginProtocolPolicy: "http-only"
-        ]
+      c.Origins = c.Origins || buildOrigins(name, distro.originID)
 
-
-
-      DefaultCacheBehavior:
+      c.DefaultCacheBehavior =
         TargetOriginId: distro.originID
+        SmoothStreaming: false
+        MinTTL: 0
+        MaxTTL: distro.expires
+        DefaultTTL: distro.expires
+        ViewerProtocolPolicy: distro.protocolPolicy
+        Compress: false
         ForwardedValues:
-          QueryString: true
           Cookies:
             Forward: "all"
           Headers: setHeaderCacheConfiguration()
-        MinTTL: 0
-        MaxTTL: distro.expires
+          QueryString: true
+          QueryStringCacheKeys:
+            Quantity: 1
+            Items: ["*"]
         TrustedSigners:
           Enabled: false
           Quantity: 0
-        ViewerProtocolPolicy: protocolPolicy
         AllowedMethods:
           Items: [ "GET", "HEAD", "OPTIONS", "PUT", "PATCH", "POST", "DELETE" ]
           Quantity: 7
           CachedMethods:
             Items: [ "GET", "HEAD", "OPTIONS" ]
             Quantity: 3
-        Compress: false
+        LambdaFunctionAssociations:
+          Quantity: 0
+
+
+      return c
 
 
 
     createDistribution = async (name) ->
+      console.log "-- Creating CloudFront CDN Distribution for #{name}"
       try
         params = DistributionConfig: yield buildConfiguration name
         distribution = yield cf.createDistribution params
@@ -146,6 +162,7 @@ module.exports = async (config, cf) ->
         throw new Error()
 
     updateDistribution = async (ETag, Distribution) ->
+      console.log "-- Updating CloudFront CDN Distribution for #{name}"
       try
         params =
           Id: Distribution.Id
@@ -160,7 +177,8 @@ module.exports = async (config, cf) ->
 
 
     confirmDistributionConfig = async (name, {ETag, Distribution}) ->
-      if deepEqual (buildConfiguration name), Distribution.DistributionConfig
+      current = Distribution.DistributionConfig
+      if deepEqual current, yield buildConfiguration(name, current)
         Distribution
       else
         updateDistribution ETag, Distribution
@@ -235,4 +253,4 @@ module.exports = async (config, cf) ->
 
 
 
-  {invalidate, set, sync, syncInvalidation}
+  {needsInvalidation, invalidate, set, sync, syncInvalidation}

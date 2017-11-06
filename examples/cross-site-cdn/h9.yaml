@@ -8,8 +8,7 @@ aws:
   site:
     index: index
     error: 404
-  cors:
-    allowedMethods: ["*"]
+  cors: permissive
 
   environments:
     staging:

@@ -23,12 +23,6 @@ permissiveHeaders = [
   "Access-Control-Request-Headers",
   "Access-Control-Request-Method",
   "Authorization",
-  "CloudFront-Forwarded-Proto",
-  "CloudFront-Is-Desktop-Viewer",
-  "CloudFront-Is-Mobile-Viewer",
-  "CloudFront-Is-SmartTV-Viewer",
-  "CloudFront-Is-Tablet-Viewer",
-  "CloudFront-Viewer-Country",
   "Host",
   "Origin",
   "Referer"

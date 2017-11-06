@@ -24,4 +24,5 @@ module.exports = do ->
     console.error errors
     throw new Error()
 
-  {config, defs: schema.definitions}
+  config._defs = schema.definitions
+  config
