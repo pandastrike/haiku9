@@ -13,7 +13,7 @@
     "h9": "./bin/h9"
   },
   "engines": {
-    "node": ">=6.0.0"
+    "node": "6.11.0"
   },
   "engine-strict": true,
   "dependencies": {
