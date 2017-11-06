@@ -2,9 +2,11 @@
 # flexible, we need to construct a data object that's slightly streamlined
 # from the one set by the user in h9.yaml
 {collect, where, empty} = require "fairmont"
+setDefaultCFHeaderConfig = require "./headers"
 
 module.exports = (config, env) ->
   out = config
+  defs = config._defs
   {aws} = config
 
   # Pull config data for the requested environment.
@@ -22,6 +24,10 @@ module.exports = (config, env) ->
 
   # Pull CloudFront (cdn / caching) info into the config
   out.aws.cache = env.cache
+
+  # Validate that the cache.headers (CloudFront CORS) configuration is consistent
+  # with the CORS configuration on the S3 bucket
+  out = setDefaultCFHeaderConfig out, defs if out.aws.cache && !out.aws.cache.headers
 
   # Return the compiled config.
   out

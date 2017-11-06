@@ -8,6 +8,7 @@ define "_publish", async (env, options) ->
   bucket = yield require("./bucket")(config)
   local = require "./local"
 
+  console.log "====="
   remoteFiles = yield bucket.scan()
   localFiles = yield local.scan()
 
@@ -16,6 +17,7 @@ define "_publish", async (env, options) ->
   yield bucket.sync actions
 
   yield bucket.web.enable()
+  console.log "=====\n"
 
   # If the user requests a CloudFront CDN distribution,
   if config.aws.cache
@@ -24,6 +26,8 @@ define "_publish", async (env, options) ->
 
   changeID = yield bucket.dns.set distributions
   yield bucket.dns.sync changeID
+  console.log "=====\n"
+  console.log "Done.\n\n"
 
 define "publish", ["build"], (env, options) ->
   run "_publish", [env, options]

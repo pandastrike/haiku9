@@ -8,25 +8,33 @@ module.exports = async (config, cf) ->
     # Locate a CloudFront distribution that matches our needs or create it.
     set: async ->
       if config.aws.cache.ssl
-        console.log "CloudFront CDN. HTTPS with redirect."
+        console.log "===== Using CloudFront CDN. HTTPS with redirect."
       else
-        console.log "CloudFront CDN. HTTP-Only."
+        console.log "===== Using CloudFront CDN. HTTP-Only."
 
       yield cf.set name for name in config.aws.hostnames
 
 
     # Wait until we're sure everything is ready on the edge servers.  For new
     # distributions, that means waiting until we get a `Deployed` status. And
-    # in every case we invalidate the cache after an update.
+    # we also need to issue cache invalidations if there are content updates.
     sync: async (distributions, changes)->
-      console.log "Waiting for CloudFront distribution to deploy. " +
-        "This will take 15-30 minutes."
+      pluralString = if distributions.length > 1 then "s are " else " is "
+      console.log """
+
+        ======
+        Confirming CloudFront distribution#{pluralString}synchronized.
+        """
 
       yield cf.sync distro for distro in distributions
+      console.log "CloudFront distribution synchronization#{pluralString}complete."
 
-      console.log "Invalidating cache. This may take several minutes."
-      invalidations = []
-      for distro in distributions
-        invalidations.push yield cf.invalidate distro, changes
-      for i in [0...distributions.length]
-        yield cf.syncInvalidation distributions[i], invalidations[i]
+      if config.aws.cache.expires != 0 && cf.needsInvalidation changes
+        console.log "Invalidating CDN cache. This may take several minutes."
+        invalidations = []
+        for distro in distributions
+          invalidations.push yield cf.invalidate distro
+        for i in [0...distributions.length]
+          yield cf.syncInvalidation distributions[i], invalidations[i]
+      console.log "CDN cache validation check complete."
+      console.log "=====\n"

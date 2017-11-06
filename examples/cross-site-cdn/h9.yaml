@@ -8,8 +8,7 @@ aws:
   site:
     index: index
     error: 404
-  cors: default
-
+  cors: permissive
 
   environments:
     staging:
@@ -25,10 +24,6 @@ aws:
         expires: 1800 # 30 minutes
         ssl: true
         priceClass: 100
-        headers:
-          - Origin
-          - Access-Control-Request-Method
-          - Access-Control-Request-Headers
 
     nonSSL:
       hostnames:

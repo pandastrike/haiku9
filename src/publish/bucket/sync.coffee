@@ -14,7 +14,7 @@ module.exports = (config, s3) ->
   bucket = require("./s3")(s3)
 
   async ({dlist, ulist}) ->
-    console.log "Syncing S3 bucket."
+    console.log "-- Syncing S3 bucket."
     total = (cat dlist, ulist).length
 
     if total == 0
