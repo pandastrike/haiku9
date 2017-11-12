@@ -34,7 +34,8 @@ module.exports = async (config, cf) ->
 
 
   set = async (name) ->
-    buildSource = (name) -> name + ".s3.amazonaws.com"
+    buildSource = (name) ->
+      name + ".s3-website-" + config.aws.region + ".amazonaws.com"
 
     setViewerCertificate = async ->
       {ssl, protocol} = config.aws.cache
@@ -77,8 +78,15 @@ module.exports = async (config, cf) ->
           Quantity: 0
           Items: []
         OriginPath: ""
-        S3OriginConfig:
-          OriginAccessIdentity: ""
+        CustomOriginConfig:
+          HTTPPort: 80
+          HTTPSPort: 443
+          OriginProtocolPolicy: "http-only"
+          OriginSslProtocols:
+            Quantity: 1
+            Items: ["TLSv1.2"]
+          OriginReadTimeout: 30
+          OriginKeepaliveTimeout: 5
       ]
 
 
