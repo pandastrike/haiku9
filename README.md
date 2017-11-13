@@ -4,10 +4,10 @@
 
 Haiku9 (H9 for short) is a static site generator. H9 supports:
 
-* Jade templates
+* Pug templates
 * Markdown
 * Handlebars (via [Panda Template](https://github.com/pandastrike/panda-template))
-* CoffeeScript
+* CoffeeScript v2
 * Stylus
 * Image files
 
@@ -125,13 +125,13 @@ docker run -it --rm -v "$PWD":/usr/src/app -v ~/.aws:/root/.aws h9 publish <envi
 
 ## Rendering Rules
 
-- For Jade and Stylus, anything with an underscore is skipped.
+- For Pug and Stylus, anything with an underscore is skipped.
 
 - Any files inside a folder named `node_modules` or `bower_components` are skipped.
 
-- YAML files are added to the context (locals) available in Jade.
+- YAML files are added to the context (locals) available in Pug.
 
-- Markdown files look for a Jade `_layout` file to use as a rendering context.
+- Markdown files look for a Pug `_layout` file to use as a rendering context.
 
 - You can include inline CoffeeScript and Stylus (mostly for Web Components) as shown below:
 
@@ -145,13 +145,13 @@ script(type="text/javascript")
 
 ## More on the Rendering Context
 
-Data files for the entire site are available in the rendering context, as well as the current directory. So if you have a `_site.yml` file in your root directory, that will be accessible as the `site` variable in Jade.
+Data files for the entire site are available in the rendering context, as well as the current directory. So if you have a `_site.yml` file in your root directory, that will be accessible as the `site` variable in Pug.
 
 Additionally, the relative path (sans extension) is mapped to a corresponding YAML file, if possible. Thus, you can access data specific to a given asset. For example, if you have an asset with the relative path of `posts/my-blog-post`, you can provide data for it in a `posts/_my-blog-post.yaml` file.
 
 ## Markdown Rendering
 
-Markdown files will look for a `_layout.jade` file in the current directory. The Jade template should have a `content` block.
+Markdown files will look for a `_layout.pug` file in the current directory. The Pug template should have a `content` block.
 
 ## Motivation
 
@@ -169,7 +169,7 @@ Some specific things we wanted, most of which exist somewhere, just not together
 
 - Leverage template language features for composing templates (instead of providing JavaScript helpers that impose their own composition model)
 
-- Emphasis on: Jade, Stylus, Markdown, and CoffeeScript
+- Emphasis on: Pug, Stylus, Markdown, and CoffeeScript
 
 - Direct support for publishing to S3/CloudFront
 

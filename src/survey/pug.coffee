@@ -3,17 +3,17 @@ include, Type, isType, isMatch,
 Method,
 glob} = require "fairmont"
 
-{define, context, jade} = require "panda-9000"
+{define, context, pug} = require "panda-9000"
 {save, render} = Asset = require "../asset"
 Data = require "../data"
 {pathWithUnderscore, isBowerComponentsPath} = require "../utils"
 
 type = Type.define Asset
 
-define "survey/jade", ["data"], ->
+define "survey/pug", ["data"], ->
   {source} = require "../configuration"
   go [
-    glob "**/*.jade", source
+    glob "**/*.+(pug|jade)", source
     reject pathWithUnderscore
     reject isBowerComponentsPath
     map context source
@@ -23,4 +23,4 @@ define "survey/jade", ["data"], ->
     tee save
   ]
 
-Method.define render, (isType type), jade
+Method.define render, (isType type), pug

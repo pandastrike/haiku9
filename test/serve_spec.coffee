@@ -12,13 +12,13 @@ SERVE_STARTUP_TIMEOUT = 5000
 
 Amen.describe "Haiku9 serve task", (context) ->
   context.test "Starts a local server on the default port", ->
-    # Build the jade fixture if needed
-    unless yield isBuilt "jade", "index.html"
-      yield build "jade"
+    # Build the pug fixture if needed
+    unless yield isBuilt "pug", "index.html"
+      yield build "pug"
 
-    # CD into the jade fixture to run it
+    # CD into the pug fixture to run it
     child = null
-    chdir join(__dirname, "fixtures", "jade"), ->
+    chdir join(__dirname, "fixtures", "pug"), ->
       child = childProcess.fork(SERVE_FILE)
 
     # Give the server a few seconds to spin up (but resolve immediately when you can)

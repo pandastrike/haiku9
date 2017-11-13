@@ -2,7 +2,7 @@ marked = require "marked"
 {go, map, tee, reject, async, include,
 Type, isType, Method, glob, read} = require "fairmont"
 
-{define, context, jade} = require "panda-9000"
+{define, context, pug} = require "panda-9000"
 {save, render} = Asset = require "../asset"
 Data = require "../data"
 {pathWithUnderscore, isBowerComponentsPath} = require "../utils"
@@ -29,7 +29,7 @@ Method.define render, (isType type), async (asset) ->
   asset.source.content = """
     extends _layout
     block content
-      :markdown
+      :markdown-it
         #{markdown}
   """
-  jade asset
+  pug asset
