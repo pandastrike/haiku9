@@ -5,7 +5,7 @@ async, include, Type, isType,
 read, glob,
 Method} = require "fairmont"
 
-{define, context, jade} = require "panda-9000"
+{define, context, pug} = require "panda-9000"
 {find, save, render} = Asset = require "../asset"
 {pathWithUnderscore} = require "../utils"
 Data = require "../data"
@@ -67,4 +67,4 @@ Method.define render, (isType type), async (asset) ->
   for item in asset.data.items
     markdown = (yield read item.source.path).split( "<!-- more -->")[0]
     item.excerpt = marked markdown
-  jade asset
+  pug asset

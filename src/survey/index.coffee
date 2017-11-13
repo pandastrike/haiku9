@@ -1,7 +1,7 @@
 require "./pass-thru"
 require "./image"
 require "./stylus"
-require "./jade"
+require "./pug"
 require "./handlebars"
 require "./coffee"
 require "./markdown"

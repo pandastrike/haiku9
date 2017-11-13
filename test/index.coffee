@@ -4,7 +4,7 @@ if targets.length is 0
   targets = [
     "coffeescript"
     "handlebars"
-    "jade"
+    "pug"
     "json"
     "scss"
     "serve"
