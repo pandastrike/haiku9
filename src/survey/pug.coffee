@@ -3,7 +3,7 @@ include, Type, isType, isMatch,
 Method,
 glob} = require "fairmont"
 
-{define, context, pug} = require "panda-9000"
+{define, context} = require "panda-9000"
 {save, render} = Asset = require "../asset"
 Data = require "../data"
 {pathWithUnderscore, isBowerComponentsPath} = require "../utils"
@@ -23,4 +23,7 @@ define "survey/pug", ["data"], ->
     tee save
   ]
 
-Method.define render, (isType type), pug
+Method.define render, (isType type), (asset) ->
+  {source} = require "../configuration"
+  pug = require("./helpers/pug")(source)
+  pug asset
