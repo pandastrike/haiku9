@@ -2,7 +2,7 @@ marked = require "marked"
 {go, map, tee, reject, async, include,
 Type, isType, Method, glob, read} = require "fairmont"
 
-{define, context, pug} = require "panda-9000"
+{define, context} = require "panda-9000"
 {save, render} = Asset = require "../asset"
 Data = require "../data"
 {pathWithUnderscore, isBowerComponentsPath} = require "../utils"
@@ -23,6 +23,8 @@ define "survey/markdown", ["data"], ->
   ]
 
 Method.define render, (isType type), async (asset) ->
+  {source} = require "../configuration"
+  pug = require("./helpers/pug")(source)
   markdown = (yield read asset.source.path)
     .replace /\n/gm, "\n    "
     .replace /\#\{/g, '\\#{'
