@@ -4,9 +4,10 @@ module.exports = (source) ->
   options =
     filters:
       "markdown-it": (text) ->
-        md = do require "markdown-it"
-        md.use require "markdown-it-inline-comments"
-        md.render text
+        md = require("markdown-it")()
+        .use require "markdown-it-inline-comments"
+        .use require "markdown-it-anchor"
+        .render text
 
   options.basedir = source if source
 
