@@ -209,6 +209,7 @@ module.exports = async (config, cf) ->
       if deepEqual current, newconfig
         Distribution
       else
+        Distribution.DistributionConfig = newconfig
         updateDistribution ETag, Distribution
 
 
