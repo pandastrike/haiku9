@@ -10,7 +10,7 @@ glob} = require "fairmont"
 {save, render} = Asset = require "../asset"
 {pathWithUnderscore} = require "../utils"
 
-formats = w ".jpg .png .webp .svg .gif .ico"
+formats = w ".jpg .jpeg .png .webp .svg .gif .ico"
 
 type = Type.define Asset
 
