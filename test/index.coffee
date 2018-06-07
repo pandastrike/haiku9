@@ -6,7 +6,6 @@ if targets.length is 0
     "handlebars"
     "pug"
     "json"
-    "scss"
     "serve"
     "stylus"
     "xml"

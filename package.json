@@ -1,6 +1,6 @@
 {
   "name": "haiku9",
-  "version": "2.0.6",
+  "version": "2.1.0",
   "description": "Asset compilation, static-site generator",
   "main": "lib/index.js",
   "files": [
@@ -35,7 +35,7 @@
     "marked": "^0.3.5",
     "mime": "^1.3.4",
     "mime-types": "^2.1.6",
-    "panda-9000": "3.0.0-alpha-02",
+    "panda-9000": "4.0.0-alpha-01",
     "rimraf": "^2.4.3"
   },
   "devDependencies": {
