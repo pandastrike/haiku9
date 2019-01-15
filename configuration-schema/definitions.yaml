@@ -120,7 +120,7 @@ corsRuleDefault:
     using any headers.  This is good for getting started, but consider setting this to something
     more specific as your project matures.
   type: string
-  enum: [ permissive, wildstyle, fuck-it, fuck-this-thing-in-particular ]
+  enum: [ default, permissive, wildstyle, fuck-it, fuck-this-thing-in-particular ]
 
 corsRuleSingle:
   description:
