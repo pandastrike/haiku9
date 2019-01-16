@@ -9,7 +9,12 @@ readSchema = (name) ->
   read resolve __dirname, "..", "..", "..", ".." "configuration-schema", name
 
 readConfiguration = ->
-  config = YAML.safeLoad await read resolve process.cwd(), "h9.yaml"
+  path = resolve process.cwd(), "h9.yaml"
+  try
+    config = YAML.safeLoad await read path
+  catch e
+    console.error "Error: Unable to read h9.yaml configuration at #{path}"
+    throw new Error()
 
   schema = YAML.safeLoad await readSchema "main.yaml"
   schema.definitions = YAML.safeLoad await readSchema "definitions.yaml"
