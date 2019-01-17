@@ -1,10 +1,12 @@
 import setupSDK from "./aws"
-import Bucket from "./bucket"
 import Local from "./local"
+import Bucket from "./bucket"
+import Edge from "./edge"
+import DNS from "./dns"
 
 Utilities = (config) ->
-  SDK = setupSDK config
-  bucket = Bucket AWS, config
   local = Local config
+  bucket = Bucket config
+  edge = await Edge config
 
-  {AWS, bucket, local}
+  {local, bucket, edge}

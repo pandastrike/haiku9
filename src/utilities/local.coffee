@@ -9,10 +9,12 @@ import {defaultExtensions, exists, md5}
 class FileTable
   constructor: (@table) ->
 
+  @create: (table) -> new FileTable create
+
   defaultExtension: ".html"
   isPresent: (key) -> @table[key]? || @table[key + @defaultExtension]?
 
-Local = ({source}) ->
+Utility = ({source}) ->
   # Produce a table of filenames and their md5 hashes.
   getFileTable = ->
     table = {}
@@ -28,7 +30,7 @@ Local = ({source}) ->
       key = second path.split source + "/"
       table[key] = md5 content
 
-    new FileTable table
+    FileTable.create table
 
   # Produce a task queue to sync the S3 bucket with local files.
   # The local file tree is authoritative.
@@ -44,10 +46,12 @@ Local = ({source}) ->
     for key in remote.directories when !(await exists join source, key)
       deletions.push key
 
-    # Upload local files that do not exist in the S3 bucket.
+    # Upload local files that are not current in the S3 bucket.
     for key, hash of local.table when !(remote.isCurrent key, hash)
       uploads.push key
 
     {deletions, uploads}
 
   {getFileTable, reconcile}
+
+export default Utility

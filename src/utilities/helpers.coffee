@@ -1,11 +1,13 @@
-import {parse} from "path"
+import {parse, join} from "path"
 import {stat} from "panda-quill"
 
 defaultExtension = ".html"
 
 usesDefaultExtension = (key) -> parse(key).ext == defaultExtension
 
-stripExtension = (key) -> parse(key).name
+stripExtension = (key) ->
+  {name, dir} = parse key
+  join dir, name
 
 exists = (path) ->
   new Promise (resolve, reject) ->
@@ -18,9 +20,11 @@ md5 = (buffer) ->
 isTooLarge = (path) ->
   {size} = await stat path
   if size > 4999999999
-    console.warn "The file #{path} is larger than 5GB and is too large to
-    store within a single S3 object.  Haiku9 currently does not support
-    multi-object files, so it is skipping this file during the sync."
+    console.error "WARNING: The file #{path} is larger than 5GB and is
+    too large to store within a single S3 object.  Haiku9 currently
+    does not support multi-object files, so it is skipping this file
+    during the sync."
+
     true
   else
     false

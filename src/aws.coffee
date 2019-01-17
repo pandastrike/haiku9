@@ -8,6 +8,6 @@ setupSDK = (config) ->
     region: config.aws.region
     sslEnabled: true
 
-  Sundog(SDK).AWS
+  config.sundog = Sundog(SDK).AWS
 
 export default setupSDK

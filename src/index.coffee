@@ -1,35 +1,37 @@
 import readConfiguration from "./configuration"
-import preprocessor from "./preprocessor"
+import setupSDK from "./aws"
+import preprocess from "./preprocessor"
 import Utilities from "./utilities"
 
 h9Tasks = (p9k) ->
 
   publish = (environment) ->
-    config = preprocessor (await readConfiguration()), environment
-    utilities = Utilities config
+    config = await readConfiguration()
+    await setupSDK config
+    await preprocess config, environment
+    utilities = await Utilities config
     {environment} = config
 
-    console.log "H9: Configuring S3 bucket(s)..."
+    console.error "H9: Configuring S3 bucket(s)..."
     await utilities.bucket.establish()
 
-    console.log "H9: Scanning Local Directory and S3..."
+    console.error "H9: Scanning Local Directory and S3..."
     [local, remote] = await Promise.all [
       utilities.local.getFileTable()
       utilities.bucket.getObjectTable()
     ]
 
-    console.log "H9: Syncing S3 bucket..."
+    console.error "H9: Syncing S3 bucket..."
     actions = await utilities.local.reconcile local, remote
-    await utilities.remote.sync actions
+    isNoOp = await utilities.remote.sync actions
 
-    if config.aws.cache
-      console.log "H9: Configuring CloudFront CDN..."
-      cdn = await utilities.cdn.set()
+    if isNoOp
+      console.error "H9: WARNING - S3 Bucket is up-to-date.  Nothing to sync."
+    else
+      console.error "H9: Publishing edge infrastructure..."
+      await utilities.edge.deploy()
 
-    console.log "H9: Configuring Route53 DNS..."
-    await utilities.dns.set cdn
-
-    console.log "H9: Done"
+    console.error "H9: Done"
 
   {publish}
 
