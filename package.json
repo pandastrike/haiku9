@@ -6,6 +6,7 @@
   "files": [
     "build/npm/src",
     "files",
+    "bin",
     "LICENSE"
   ],
   "bin": {

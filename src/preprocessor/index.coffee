@@ -10,8 +10,8 @@ preprocess = (config, environment) ->
   # Pull config data for the requested environment.
   config.environment = environments[environment]
   if !config.environment?
-    console.error "Cannot find config for specified environment. Aborting."
-    throw new Error()
+    throw new Error "Cannot find configuration for the specified environment, '#{environment}'"
+
 
   {hostnames, apex, cache} = config.environment
 
