@@ -81,7 +81,8 @@ Utility = ({sundog, source, environment, site}) ->
   sync = ({deletions, uploads}) ->
       total = deletions.length + uploads.length
       if total == 0
-        true
+        console.error "H9: WARNING - S3 Bucket is already up-to-date.
+          Nothing to sync.".yellow
       else
         progress = new ProgressBar "syncing [:bar] :percent",
           total: total
@@ -89,7 +90,6 @@ Utility = ({sundog, source, environment, site}) ->
           incomplete: " "
 
         await _sync deletions, uploads, progress
-        false
 
   {establish, getObjectTable, sync}
 

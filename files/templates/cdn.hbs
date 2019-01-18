@@ -1,6 +1,6 @@
 Resources:
-  {{each endpoints}}
-  {{with cloudfront}}
+  {{#each endpoints}}
+  {{#with cloudfront}}
   CloudFront{{../index}}:
     Type: "AWS::CloudFront::Distribution"
     Properties:
@@ -18,9 +18,9 @@ Resources:
           ForwardedValues:
             Cookies:
               Forward: "all"
-            {{if headers}}
+            {{#if headers}}
             Headers:
-              {{each headers}}
+              {{#each headers}}
               - "{{.}}"
               {{/each}}
             {{/if}}
@@ -37,21 +37,22 @@ Resources:
           - Id: HaikuS3Origin
             DomainName: {{bucketURL}}
             OriginPath: ""
-            S3OriginConfig: {}
+            CustomOriginConfig:
+              HTTPPort: 80
+              OriginProtocolPolicy: "http-only"
         PriceClass: PriceClass_{{priceClass}}
         ViewerCertificate:
-          {{if certificate}}
-          ACMCertificateArn: {{certificate}}
-          SSLSupportMethod: "sni-only"
+          {{#if certificate}}
+          AcmCertificateArn: {{certificate}}
+          SslSupportMethod: "sni-only"
           MinimumProtocolVersion: {{protocolVersion}}
           {{else}}
           CloudFrontDefaultCertificate: true
           MinimumProtocolVersion: "SSLv3"
-          CertificateSource: "cloudfront"
           {{/if}}
   {{/with}}
 
-  {{with route53}}
+  {{#with route53}}
   DNS{{../index}}:
     Type: AWS::Route53::RecordSetGroup
     DependsOn:

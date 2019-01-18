@@ -1,10 +1,11 @@
 import {first} from "panda-parchment"
 import setCORS from "./cors"
+import {Helpers} from "sundog"
 
 preprocess = (config, environment) ->
   {environments, domain, sundog} = config
   {hzGet} = sundog.Route53()
-  {root} = sundog.URL
+  {root} = Helpers.url
 
   # Pull config data for the requested environment.
   config.environment = environments[environment]

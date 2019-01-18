@@ -36,4 +36,7 @@ isTooLarge = (path) ->
   else
     false
 
-export {defaultExtension, usesDefaultExtension, stripExtension, startsWithUnderscore, exists, md5, isTooLarge}
+# CloudFormation stack names must be [A-Za-z0-9-] and less than 128 characters
+generateStackName = (name) -> name.replace(/\./g, "-")[...128]
+
+export {defaultExtension, usesDefaultExtension, stripExtension, startsWithUnderscore, exists, md5, isTooLarge, generateStackName}

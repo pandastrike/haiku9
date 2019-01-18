@@ -1,3 +1,4 @@
+import "colors"
 import readConfiguration from "./configuration"
 import setupSDK from "./aws"
 import preprocess from "./preprocessor"
@@ -21,10 +22,7 @@ publish = (environment) ->
 
   console.error "H9: Syncing S3 bucket..."
   actions = await utilities.local.reconcile local, bucket
-  isNoOp = await utilities.bucket.sync actions
-
-  if isNoOp
-    console.error "H9: WARNING - S3 Bucket is up-to-date.  Nothing to sync."
+  await utilities.bucket.sync actions
 
   console.error "H9: Publishing edge infrastructure..."
   await utilities.edge.deploy()
