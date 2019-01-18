@@ -4,12 +4,14 @@ import setupSDK from "./aws"
 import preprocess from "./preprocessor"
 import Utilities from "./utilities"
 
-publish = (environment) ->
+setup = (environment) ->
   config = await readConfiguration()
   await setupSDK config
   await preprocess config, environment
-  utilities = await Utilities config
-  {environment} = config
+  await Utilities config
+
+publish = (environment) ->
+  utilities = await setup environment
 
   console.error "H9: Checking S3 bucket configuration..."
   await utilities.bucket.establish()
@@ -29,6 +31,15 @@ publish = (environment) ->
 
   console.error "H9: Done"
 
+teardown = (environment) ->
+  utilities = await setup environment
+  console.error "H9: Edge infrastructure teardown..."
+  await utilities.edge.delete()
 
-export {publish}
-export default {publish}
+  console.error "H9: Deleting S3 bucket..."
+  await utilities.bucket.delete()
+
+  console.error "H9: Done"
+
+export {publish, teardown}
+export default {publish, teardown}

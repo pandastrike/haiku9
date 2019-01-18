@@ -60,7 +60,11 @@ Utility = (config) ->
 
     await invalidateCache() if cache?
 
+  teardown = ->
+    {delete:destroy, get} = sundog.CloudFormation()
+    name = generateStackName first hostnames
+    await destroy name if await get name
 
-  {deploy}
+  {deploy, delete: teardown}
 
 export default Utility

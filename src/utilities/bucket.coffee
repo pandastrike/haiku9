@@ -18,32 +18,30 @@ class Bucket
       false
 
 Utility = ({sundog, source, environment, site}) ->
-  {bucketTouch, bucketSetACL, bucketSetCORS, bucketSetWebsite,
-  list, delBatch: _delBatch, PUT} = sundog.S3()
-
+  s3 = sundog.S3()
   names = environment.hostnames
 
   # Create a new bucket or make sure an existing one is properly configured.
   _establish = ({cors}, name) ->
-    await bucketTouch name
-    await bucketSetACL name, "public-read"
-    (await bucketSetCORS name, cors) if cors
+    await s3.bucketTouch name
+    await s3.bucketSetACL name, "public-read"
+    (await s3.bucketSetCORS name, cors) if cors
 
   establish = ->
     (await _establish environment, name) for name in names
 
-    await bucketSetWebsite (first names),
+    await s3.bucketSetWebsite (first names),
       index: site.index.toString()
       error: site.error.toString()
 
     for name in rest names
-      await bucketSetWebsite name, false,
+      await s3.bucketSetWebsite name, false,
         host: first names
         protocol: if environment.cache?.ssl then "https" else "http"
 
   # Scan for S3 bucket to form an ETag dictionary.
   scan = (name) ->
-    objects = await list name
+    objects = await s3.list name
     table = {}
     directories = []
     for {Key, ETag} in objects
@@ -57,15 +55,15 @@ Utility = ({sundog, source, environment, site}) ->
   getObjectTable = -> await scan first names
 
 
-  delBatch = (batch) -> _delBatch (first names), batch
+  deleteBatch = (batch) -> s3.deleteBatch (first names), batch
   put = (key, alias) ->
-    await PUT.file (first names), (alias ? key), (join source, key),
+    await s3.PUT.file (first names), (alias ? key), (join source, key),
       ACL: "public-read"
 
   _sync = (deletions, uploads, progress) ->
     # process object deletion queue
     for batch in partition 1000, deletions
-      await delBatch batch
+      await deleteBatch batch
       progress.tick batch.length
 
     # process object upload queue
@@ -91,6 +89,10 @@ Utility = ({sundog, source, environment, site}) ->
 
         await _sync deletions, uploads, progress
 
-  {establish, getObjectTable, sync}
+  destroy = ->
+    await s3.bucketEmpty first names
+    await s3.bucketDelete name for name in names
+
+  {establish, getObjectTable, sync, delete: destroy}
 
 export default Utility

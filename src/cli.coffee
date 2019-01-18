@@ -30,7 +30,7 @@ do ->
       for a given environment"
     .action (environment) ->
       if environment?
-        h9.publish environment
+        h9.teardown environment
       else
         console.error "No environment has been provided."
         console.error "Usage: h9 delete <environment>"
