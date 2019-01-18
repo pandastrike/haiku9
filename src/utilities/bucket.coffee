@@ -1,5 +1,5 @@
 import {join} from "path"
-import {first, second} from "panda-parchment"
+import {first, second, rest} from "panda-parchment"
 import {partition} from "panda-river"
 import ProgressBar from "progress"
 import {usesDefaultExtension, stripExtension, isTooLarge} from "./helpers"
@@ -17,9 +17,9 @@ class Bucket
     else
       false
 
-Utility = ({sundog, source, environment, aws}) ->
-  {bucketHead, bucketSetACL, bucketSetCORS, list,
-  delBatch: _delBatch, put: _put} = sundog.S3()
+Utility = ({sundog, source, environment, site}) ->
+  {bucketTouch, bucketSetACL, bucketSetCORS, bucketSetWebsite,
+  list, delBatch: _delBatch, PUT} = sundog.S3()
 
   names = environment.hostnames
 
@@ -33,13 +33,13 @@ Utility = ({sundog, source, environment, aws}) ->
     (await _establish environment, name) for name in names
 
     await bucketSetWebsite (first names),
-      index: aws.site.index.toString()
-      error: aws.site.error.toString()
+      index: site.index.toString()
+      error: site.error.toString()
 
     for name in rest names
-      await bucketSetWebsite (first names), false,
+      await bucketSetWebsite name, false,
         host: first names
-        protocol: "https"
+        protocol: if environment.cache?.ssl then "https" else "http"
 
   # Scan for S3 bucket to form an ETag dictionary.
   scan = (name) ->
@@ -58,37 +58,37 @@ Utility = ({sundog, source, environment, aws}) ->
 
 
   delBatch = (batch) -> _delBatch (first names), batch
-  put = (key) ->
-    await _put (first names), key, join source, key
-    await putACL (first names), key, "public-read"
+  put = (key, alias) ->
+    await PUT.file (first names), (alias ? key), (join source, key),
+      ACL: "public-read"
 
-  _sync = (delections, uploads, tick) ->
+  _sync = (deletions, uploads, progress) ->
     # process object deletion queue
     for batch in partition 1000, deletions
       await delBatch batch
-      tick batch.length
+      progress.tick batch.length
 
     # process object upload queue
     for key in uploads
       if await isTooLarge join source, key
-        tick()
+        progress.tick()
         continue
 
       await put key
-      await put stripExtension key if usesDefaultExtension key
-      tick()
+      await put key, stripExtension key if usesDefaultExtension key
+      progress.tick()
 
   sync = ({deletions, uploads}) ->
       total = deletions.length + uploads.length
       if total == 0
         true
       else
-        {tick} = new ProgressBar "syncing [:bar] :percent",
+        progress = new ProgressBar "syncing [:bar] :percent",
           total: total
           complete: "="
           incomplete: " "
 
-        await _sync deletions, uploads, tick
+        await _sync deletions, uploads, progress
         false
 
   {establish, getObjectTable, sync}

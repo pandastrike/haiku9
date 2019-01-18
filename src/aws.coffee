@@ -5,7 +5,7 @@ setupSDK = (config) ->
   profile = config.profile ? "default"
   SDK.config =
     credentials: new SDK.SharedIniFileCredentials {profile}
-    region: config.aws.region
+    region: config.region
     sslEnabled: true
 
   config.sundog = Sundog(SDK).AWS

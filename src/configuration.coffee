@@ -1,12 +1,13 @@
 import {resolve} from "path"
-import {read} from "panda-quill"
+import {read as _read} from "panda-quill"
 import {yaml} from "panda-serialize"
 import AJV from "ajv"
 
 ajv = new AJV()
 
-readSchema = (name) ->
-  read resolve __dirname, "..", "..", "..", ".." "configuration-schema", name
+read = (name) ->
+  _read resolve __dirname, "..", "..", "..", "files",
+    "configuration-schema", name
 
 readConfiguration = ->
   path = resolve process.cwd(), "h9.yaml"
@@ -16,8 +17,8 @@ readConfiguration = ->
     console.error "Error: Unable to read h9.yaml configuration at #{path}"
     throw new Error()
 
-  schema = yaml await readSchema "main.yaml"
-  schema.definitions = yaml await readSchema "definitions.yaml"
+  schema = yaml await read "main.yaml"
+  schema.definitions = yaml await read "definitions.yaml"
   isValid = ajv.validate schema, config
   if !isValid
     console.error yaml ajv.errors

@@ -2,11 +2,10 @@
   "name": "haiku9",
   "version": "3.0.0",
   "description": "Asset compilation, static-site generator",
-  "main": "lib/index.js",
+  "main": "build/npm/src/index.js",
   "files": [
-    "bin",
-    "configuration-schema",
-    "lib",
+    "build/npm/src",
+    "files",
     "LICENSE"
   ],
   "bin": {
@@ -43,14 +42,14 @@
     "ajv": "^6.6.2",
     "aws-sdk": "^2.387.0",
     "commander": "^2.19.0",
-    "express": "^4.16.4",
-    "jstransformer-stylus": "^1.4.0",
+    "mime": "^2.4.0",
     "panda-parchment": "^4.2.0",
     "panda-quill": "^3.4.5",
     "panda-river": "^4.4.2",
-    "panda-serialize": "^0.2.0",
+    "panda-serialize": "^0.4.0",
+    "panda-template": "^0.4.2",
     "progress": "^2.0.3",
-    "sundog": "^2.0.4"
+    "sundog": "file:../sundog"
   },
   "devDependencies": {
     "panda-9000": "^4.4.0",

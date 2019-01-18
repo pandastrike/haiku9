@@ -1,5 +1,7 @@
+import Crypto from "crypto"
 import {parse, join} from "path"
 import {stat} from "panda-quill"
+import {first} from "panda-parchment"
 
 defaultExtension = ".html"
 
@@ -14,8 +16,13 @@ exists = (path) ->
     fs path, (err) ->
       if err? then resolve false else resolve true
 
+startsWithUnderscore = (path) ->
+  {name} = parse path
+  (first name) == "_"
+
+# NOTE: S3 object PUT wants base64 encoded md5, but returns hex md5 ETags.
 md5 = (buffer) ->
-  Crypto.createHash('md5').update(buffer).digest("base64")
+  Crypto.createHash('md5').update(buffer).digest("hex")
 
 isTooLarge = (path) ->
   {size} = await stat path
@@ -29,4 +36,4 @@ isTooLarge = (path) ->
   else
     false
 
-export {defaultExtension, usesDefaultExtension, stripExtension, exists, md5, isTooLarge}
+export {defaultExtension, usesDefaultExtension, stripExtension, startsWithUnderscore, exists, md5, isTooLarge}

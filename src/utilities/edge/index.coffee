@@ -17,25 +17,30 @@ Utility = (config) ->
 
   deploy = ->
     console.error message
-    if cache?
-      await renderCDNTemplate config
-    else
-      await renderS3SiteTemplate config
+    template =
+      if cache?
+        await renderCDNTemplate config
+      else
+        await renderS3SiteTemplate config
 
     # CloudFormation stack names must be [0-9a-zA-z-], start with a letter,
     # and be 128 characters or less.
-    name = environment.hostnames[0].replace("/\./g", "-")[...128]
+    name = environment.hostnames[0].replace(/\./g, "-")[...128]
 
     stack =
       StackName: name
       Capabilities: ["CAPABILITY_IAM"]
-      Tags:
-        - Key: "deployed by"
-          Value: "Haiku9"
-        - Key: "domain"
-          Value: environment.hostnames[0]
+      Tags: [{
+        Key: "deployed by"
+        Value: "Haiku9"
+      }, {
+        Key: "domain"
+        Value: environment.hostnames[0]
+      }]
       TemplateBody: template
 
+    console.error "  - This will take a moment..."
+    console.error template
     if (await get name)
       await update stack
     else

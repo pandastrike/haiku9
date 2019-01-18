@@ -1,15 +1,19 @@
 import {resolve} from "path"
-import {read} from "panda-quill"
+import {read as _read} from "panda-quill"
 import {first} from "panda-parchment"
 import pandaTemplate from "panda-template"
-import {lookupS3HostedZoneID} from "./templates/s3-hostedzone-ids"
+import {lookupS3HostedZoneID} from "./s3-hostedzone-ids"
 
-render = ({sundog, environment, aws:{region}}) ->
+read = (name) ->
+  _read resolve __dirname, "..", "..", "..", "..", "..", "files",
+    "templates", name
+
+render = ({sundog, environment, region}) ->
     {fullyQualify} = sundog.URL
 
     # Ready the template
     T = new pandaTemplate()
-    template = await read resolve __dirname, "templates", "direct.hbs"
+    template = await read "direct.hbs"
 
     # Compile the configuration needed to fill out the above template.
     {hostnames, hostedZoneID} = environment

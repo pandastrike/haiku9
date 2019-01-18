@@ -1,15 +1,15 @@
-import Crypto from "crypto"
 import fs from "fs"
+import mime from "mime"
 import {first, second} from "panda-parchment"
 import {lsR, read} from "panda-quill"
 import {go} from "panda-river"
-import {defaultExtensions, exists, md5}
+import {defaultExtensions, startsWithUnderscore, exists, md5} from "./helpers"
 
 
 class FileTable
   constructor: (@table) ->
 
-  @create: (table) -> new FileTable create
+  @create: (table) -> new FileTable table
 
   defaultExtension: ".html"
   isPresent: (key) -> @table[key]? || @table[key + @defaultExtension]?
@@ -19,9 +19,9 @@ Utility = ({source}) ->
   getFileTable = ->
     table = {}
     paths = await lsR source
-    for path in paths when (first path) != "_"
+    for path in paths when !(startsWithUnderscore path)
       content =
-        if "text" in mime.lookup path
+        if "text" in mime.getType path
           Buffer.from await read path
         else
           await read path, "buffer"

@@ -27,7 +27,7 @@ S3HostedZones =
 
 lookupS3HostedZoneID = (region) ->
 
-  if (id = S3HostedZones region)?
+  if (id = S3HostedZones[region])?
     id
   else
     throw new Error "H9 does not recognize the AWS region '#{region}'

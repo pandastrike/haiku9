@@ -1,9 +1,13 @@
 import {resolve} from "path"
-import {read} from "panda-quill"
+import {read as _read} from "panda-quill"
 import {first} from "panda-parchment"
 import pandaTemplate from "panda-template"
 
-render = ({sundog, environment, aws:{region}}) ->
+read = (name) ->
+  _read resolve __dirname, "..", "..", "..", "..", "..", "files",
+    "templates", name
+
+render = ({sundog, environment, region}) ->
     {fullyQualify} = sundog.URL
     {fetch} = sundog.ACM "us-east-1"  # Quirk of where we always put certs.
 
@@ -26,7 +30,7 @@ render = ({sundog, environment, aws:{region}}) ->
 
     # Ready the template
     T = new pandaTemplate()
-    template = await read resolve __dirname, "templates", "cdn.hbs"
+    template = await read "cdn.hbs"
 
     # Compile the configuration needed to fill out the above template.
     {hostnames, hostedZoneID, cache} = environment

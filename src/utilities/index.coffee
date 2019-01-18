@@ -1,8 +1,6 @@
-import setupSDK from "./aws"
 import Local from "./local"
 import Bucket from "./bucket"
 import Edge from "./edge"
-import DNS from "./dns"
 
 Utilities = (config) ->
   local = Local config
@@ -10,3 +8,5 @@ Utilities = (config) ->
   edge = await Edge config
 
   {local, bucket, edge}
+
+export default Utilities

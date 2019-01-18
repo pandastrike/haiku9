@@ -1,0 +1,79 @@
+type: object
+additionalProperties: false
+required: [ source, domain, region, site, environments ]
+properties:
+  profile:
+    description: |
+      The name of the AWS profile to access from your credentials document. Omitting this will cause Haiku to access profile "default"
+    type: string
+
+  source:
+    description: Directory where h9 can find assets to publish.
+    type: string
+
+  domain:
+    description:
+      The base domain to host your site.  All environments will be allocated
+      as subdomains to this.  You must have a public hostedzone setup in AWS
+    type: string
+
+  region:
+    description:
+      Region of target S3 bucket. If the bucket already exists, placing the
+      wrong region prevent Haiku from syncing.
+    type: string
+    enum:
+      - ap-northeast-1
+      - ap-northeast-2
+      - ap-northeast-3
+      - ap-south-1
+      - ap-southeast-1
+      - ap-southeast-2
+      - ca-central-1
+      - eu-central-1
+      - eu-west-1
+      - eu-west-2
+      - eu-west-3
+      - eu-north-1
+      - sa-east-1
+      - us-east-1
+      - us-east-2
+      - us-west-1
+      - us-west-2
+
+  site:
+    description: S3 Bucket configuration to provide static-site hosting.
+    type: object
+    additionalProperties: false
+    required: [ index, error ]
+    properties:
+      index:
+        description: Homepage for static site. Default page for site.
+        anyOf:
+          - type: string
+          - type: integer
+
+      error:
+        description: Page for S3 to display on error. Usually 404 errors.
+        anyOf:
+          - type: string
+          - type: integer
+
+  cors: {$ref: "#/definitions/cors"}
+
+  environments:
+    description:
+      An environment is a collection of S3 buckets, DNS records, and
+      optionally CloudFront distributions that are allocated on your behalf
+      to deploy the static site.  Perhaps you wish to test changes at a
+      secondary hostname without disrupting production deployments.
+      Organizing configuration for those two cases into separate
+      environments allows you to publish from the commandline by just
+      invoking the name, not adjusting configuration each time.
+
+      environments is an object where the keys are the name of the given
+      environment and its value is its definition.  Use "h9 publish <title>"
+      to invoke this configuration within the publish process.
+    type: object
+    minProperties: 1
+    additionalProperties: {$ref: "#/definitions/environment"}
