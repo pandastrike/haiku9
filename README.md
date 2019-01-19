@@ -1,24 +1,12 @@
-[![Build Status](https://travis-ci.org/pandastrike/haiku9.svg)](https://travis-ci.org/pandastrike/haiku9)
-
 # Haiku9
 
-Haiku9 (H9 for short) is a static site generator. H9 supports:
+Haiku9 (H9 for short) is a static site publisher. H9 supports:
 
-* Pug templates
-* Markdown
-* Handlebars (via [Panda Template](https://github.com/pandastrike/panda-template))
-* CoffeeScript v2
-* Stylus
-* Image files
+- Syncing Web assets with an S3 bucket
+- Configuring that bucket as a website
+- Optionally fronting that bucket with a CloudFront distribution to support edge caching and/or TLS termination.
 
-H9 works by using [Panda-9000](https://github.com/pandastrike/panda-9000)
-to define a series of asset pipelines.
-
-H9 provides a build command and simple Web server for development.
-
-## Documentation
-
-The [H9 docs](https://www.pandastrike.com/open-source/haiku9/) cover many details not addressed in this README.
+H9 provides CLI and programmatic interfaces, though most of the configuration is handled with your `h9.yaml` file.
 
 ## Installation
 
@@ -28,80 +16,61 @@ The [H9 docs](https://www.pandastrike.com/open-source/haiku9/) cover many detail
 npm install -g haiku9
 ```
 
-### Docker
-
-```shell
-docker pull pandastrike/haiku9
-docker tag pandastrike/haiku9 h9
-```
-
 ## Configuration
 
-At the root of your site, create a `h9.yaml` file. That should have the following settings:
+At the root of your site, create a `h9.yaml` file. Here is an example for publishing to a hypothetical https://haiku9.pandastrike.com
 
-- `source` — the path to the directory containing your site's source files
+```yaml
+# The directory Haiku9 will copy into an S3 bucket.  The local directory is
+# authoritative, so files will be added or deleted from your bucket to make
+# it match. Haiku9 also uses MD5 hashes to make sure existing bucket files
+# are current.
+source: build
 
-- `target` — the path to the directory where you want to put the compiled assets
+# Optional. The name of the AWS profile that Haiku will look for in your credentials file.  This will default to "default" if omitted.
+profile: panda
 
-- `exclusions` (Array) - List of paths to exlude from the S3 synchronization process. Haiku will recursively exlcude all descedents of a specified path.
+# The root domain for your site.
+domain: pandastrike.com
 
-- `server` — the server configuration (see below)
+# The AWS region you would like to use for your S3 bucket that serves your site
+region: us-west-1
 
-- `blog` — the blog configuration (see below)
+# The default path when navigating to "/", as well as the page to serve if
+# a requested path does not exist.
+site:
+  index: index
+  error: 404
 
-### Server Configuration
+# If you a publishing content to CDN that will be accessed through CORS, you can set your CORS settings here.  `wildstyle` is the permissive "*"
+cors: wildstyle
 
-- `port` — the port the server runs on
 
-### Exclusions Configuration
+# Haiku9 uses environments to organize your a project's configuration into
+# sections while maintaining access to common configuration.  Each environment
+# is named as the keys in the dictionary below.
+environments:
 
-- String - the s3 path(s) you wish to excluse from the synch process
+  # The staging environment has a hostname, but no cache configuration, so it
+  # will serve directly from the S3 bucket without TLS termination.
+  staging:
+    hostnames:
+      - staging-haiku
 
-### Blog Configuration
-
-- `page.size` — the number of post excerpts per page
-
-## Development Server
-
-During the development, you'll want to run a simple static server.
-
-### Local
-
-```shell
-h9 serve
+  # The production environment has a different hostname setting, as well as
+  # configuration for the CloudFront distribution.
+  production:
+    hostnames:
+      - haikue
+    cache:
+      expires: 1800 # 30 minutes
+      ssl: true
+      priceClass: 100
 ```
 
-### Docker
-
-```shell
-docker run -it --rm -v "$PWD":/usr/src/app -p 1337:1337 haiku9 h9 serve
-```
-
-NOTE: To install your app's npm modules via the `h9` Docker image:
-
-```shell
-docker run -it --rm -v "$PWD":/usr/src/app haiku9 npm install
-```
-
-## Compilation
-
-Once you're ready, you want to compile all your assets.
-
-### Local
-
-```shell
-h9 build
-```
-
-### Docker
-
-```shell
-docker run -it --rm -v "$PWD":/usr/src/app h9 build
-```
 
 ## Publishing
 
-(See the [H9 Publish Docs](https://www.pandastrike.com/open-source/haiku9/publish/) for more information).
 
 To publish your compiled site to AWS, first confirm that your AWS credentials are defined in `~/.aws/credentials`:
 
@@ -109,70 +78,18 @@ To publish your compiled site to AWS, first confirm that your AWS credentials ar
   aws_access_key_id=AKIAIOSFODNN7EXAMPLE
   aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
 
-Next, push to AWS using one of the approaches below:
-
-### Local
+Next, publish to AWS:
 
 ```shell
 h9 publish <environment>
 ```
 
-### Docker
+And in a few minutes you will have a new website.
+
+If you would like to tear it down.
 
 ```shell
-docker run -it --rm -v "$PWD":/usr/src/app -v ~/.aws:/root/.aws h9 publish <environment>
+h9 delete <environment>
 ```
 
-## Rendering Rules
-
-- For Pug and Stylus, anything with an underscore is skipped.
-
-- Any files inside a folder named `node_modules` or `bower_components` are skipped.
-
-- YAML files are added to the context (locals) available in Pug.
-
-- Markdown files look for a Pug `_layout` file to use as a rendering context.
-
-- You can include inline CoffeeScript and Stylus (mostly for Web Components) as shown below:
-
-```
-style(rel="stylesheet")
-   include:stylus _src/styles.styl
-
-script(type="text/javascript")
-   include:coffee-script _src/index.coffee
-```
-
-## More on the Rendering Context
-
-Data files for the entire site are available in the rendering context, as well as the current directory. So if you have a `_site.yml` file in your root directory, that will be accessible as the `site` variable in Pug.
-
-Additionally, the relative path (sans extension) is mapped to a corresponding YAML file, if possible. Thus, you can access data specific to a given asset. For example, if you have an asset with the relative path of `posts/my-blog-post`, you can provide data for it in a `posts/_my-blog-post.yaml` file.
-
-## Markdown Rendering
-
-Markdown files will look for a `_layout.pug` file in the current directory. The Pug template should have a `content` block.
-
-## Motivation
-
-Why another static site generator? Mostly because, believe it or not, we could not find the particular set of features we wanted, and we wanted those features badly enough to write Haiku9.
-
-Foremost among them was a desire to be able to easily hack new features. Haiku9's design is made simple by effectively being nothing more than an opinionated configuration of Panda-9000. That is, it's just a bunch of asset compilation tasks. New pipelines are easy to add.
-
-Some specific things we wanted, most of which exist somewhere, just not together in an hackable (for us, anyway) form:
-
-- All content (even the data) should be file-based so we can use our existing Git workflow to collaborate on the site
-
-- Integration of external data files (as opposed to front-matter)
-
-- Use of YAML (not JSON) for data and configuration files
-
-- Leverage template language features for composing templates (instead of providing JavaScript helpers that impose their own composition model)
-
-- Emphasis on: Pug, Stylus, Markdown, and CoffeeScript
-
-- Direct support for publishing to S3/CloudFront
-
-- Support for typographically processing HTML
-
-- Support for on-the-fly image compression
+And it will be gone just as easily.
