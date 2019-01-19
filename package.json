@@ -49,7 +49,7 @@
     "panda-quill": "^3.4.5",
     "panda-river": "^4.4.2",
     "panda-serialize": "^0.4.0",
-    "panda-template": "^0.4.2",
+    "panda-template": "^1.0.0",
     "progress": "^2.0.3",
     "sundog": "^3.0.0"
   },
