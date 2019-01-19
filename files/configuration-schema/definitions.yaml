@@ -1,0 +1,179 @@
+environment:
+  description:
+    A collection of S3 buckets, DNS records, and optionally CloudFront
+    distributions that are allocated on your behalf to deploy the static site.
+  type: object
+  additionalProperties: false
+  required: [ hostnames ]
+  properties:
+    hostnames:
+      description:
+        Name or names under which H9 creates subdomains and publishes your
+        site.  This field accepts either a single name or an array.  When an
+        array is provided, the first name is the primary hostname and all
+        secondary ones will be routed to it.  For each hostname, separate S3
+        buckets, DNS records, and (optinally) CloudFront distros are created.
+        Example "www" will produce "www.example.com"
+      anyOf:
+        - type: string
+          minLength: 1
+        - type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            type: string
+
+    apex:
+      description:
+        In addition to the hostnames property, this optional flag will add
+        the apex domain to the list of hostnames. Choosing "primary"
+        overrides the first name specified in the "hostnames" field.  All
+        hostnames will route to the apex. However, choosing "secondary" causes
+        the apex to be treated as a just another secondary hostname.
+        Example "example.com" to "www.example.com"
+      type: string
+      enum: [ "primary", "secondary" ]
+
+
+    cache:
+      description:
+        Optional configuration for CloudFront to provide caching on the AWS
+        global CDN infrastructure, including support for SSL.
+      type: object
+      additionalProperties: false
+      properties:
+        httpVersion:
+          description:
+            Determines the network protocol to serve content to clients. HTTP/2
+            is newer and more awesome, so when this value is omitted, Haiku
+            deafults to that protocol.
+          type: string
+          enum: [ "http1.1", "http2" ]
+
+        ssl:
+          description:
+            Determines if CloudFront should use SSL when serving.  When this is
+            omitted, Haiku defaults to false. Don't forget to have your SSL cert
+            sorted before you set it to true.
+          type: boolean
+
+        protocol:
+          description:
+            Sets the TLS protocol version to use when setting up your site to
+            serve over HTTPS.  Higher versions are not supported by older
+            clients, but they leverage more robust cryptography and signalling.
+            When this is omitted, Haiku defaults to vTLSv1.2_2018.
+          type: string
+          enum: [ "SSLv3", TLSv1", "TLSv1_2016", "TLSv1.1_2016", "TLSv1.2_2018" ]
+
+        expires:
+          description:
+            The maximum amount of time, in seconds, that an object stays
+            cached in the edge server before additional requests are forwarded
+            to the S3 bucket to check for updates.  When this value is omitted,
+            Haiku defaults to 60 seconds.
+          type: integer
+          minimum: 0
+          maximum: 3153600000
+
+        priceClass:
+          description:
+            Sets the extent to which content is cached on CloudFronts edge
+            servers.  By limiting to edge servers in cheaper locations
+            throughout the world, you can lower your expenses at the cost of
+            less coverage.  When this value is omitted, Haiku defaults to 100,
+            which is cheapest, but comes with the smallest coverage area.
+          anyOf:
+            - type: string
+              enum: [ "100", "200", "All"]
+            - type: integer
+              multipleOf: 100
+              minimum: 100
+              maximum: 200
+        headers:
+          description:
+            This sets the list of headers forwarded and cached by the CloudFront
+            distribution. Omitting this field will cause CF to forward the
+            default headers, but not cache them.  You may specify a wildcard,
+            which forwards all headers, but it cannot leverage caching.
+          type: array
+          items:
+            type: string
+            minLength: 1
+
+
+cors:
+  description:
+    S3 Bucket configuration for Cross Origin Resource Sharing (CORS) headers.
+    You may either specify the string "default", which installs a permissive CORS policy,
+    or specify a detailed configuration.  The default configuration allows GET requests
+    from any domain and exposes all available headers in the response.
+  anyOf:
+    - {$ref: "#/definitions/corsRuleDefault"}
+    - {$ref: "#/definitions/corsRuleSingle"}
+    - {$ref: "#/definitions/corsRuleMultiple"}
+
+corsRuleDefault:
+  description:
+    This defines the CORS rule when specifying an easy, permissive configuration.  This circumvents
+    the browser's enforcement of the CORS mechanism by allowing GET requests from any domain,
+    using any headers.  This is good for getting started, but consider setting this to something
+    more specific as your project matures.
+  type: string
+  enum: [ default, permissive, wildstyle, fuck-it, fuck-this-thing-in-particular ]
+
+corsRuleSingle:
+  description:
+    This defintes the CORS rule with all the properties the user may specify.
+  type: object
+  additionalProperties: false
+  properties:
+    allowedHeaders:
+      description:
+        List of headers allowed in a pre-flight OPTIONS request to the Haiku deployment.
+      type: array
+      minItems: 1
+      uniqueItems: true
+      items:
+        type: string
+    allowedMethods:
+      description:
+        List of HTTP methods that the Haiku deployment is allowed to execute.
+        This is allowed to be flexible, but should probably only include "GET".
+      type: array
+      minItems: 1
+      uniqueItems: true
+      items:
+        type: string
+    allowedOrigins:
+      description:
+        List of domains to which the Haiku deployment may respond.
+      type: array
+      minItems: 1
+      uniqueItems: true
+      items:
+        type: string
+    exposedHeaders:
+      description:
+        List of headers that the Haiku deployment may include in the reponse.
+      type: array
+      minItems: 1
+      uniqueItems: true
+      items:
+        type: string
+    maxAge:
+      description:
+        The maximum time, in seconds, the Haiku deployment asks that the browser
+        holds the reponse to the OPTIONS request in its local cache.
+      type: integer
+      minimum: 0
+
+corsRuleMultiple:
+  description:
+    CORS rules specifications may also chain together multiple rules to increase
+    specificity.  This supports that possible configuration.
+  type: array
+  minItems: 1
+  items:
+    - {$ref: "#/definitions/corsRuleDefault"}
+    - {$ref: "#/definitions/corsRuleSingle"}

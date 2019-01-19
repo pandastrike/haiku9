@@ -1,53 +1,18 @@
 {
   "name": "haiku9",
-  "version": "2.1.0",
+  "version": "3.0.0",
   "description": "Asset compilation, static-site generator",
-  "main": "lib/index.js",
+  "main": "build/npm/src/index.js",
   "files": [
+    "build/npm/src",
+    "files",
     "bin",
-    "configuration-schema",
-    "lib",
     "LICENSE"
   ],
   "bin": {
     "h9": "./bin/h9"
   },
-  "engines": {
-    "node": ">=6.0.0"
-  },
-  "engine-strict": true,
-  "dependencies": {
-    "aws-sdk": "2.145.0",
-    "browserify": "^12.0.1",
-    "chokidar": "^1.2.0",
-    "coffeeify": "^2.0.1",
-    "coffeescript": "^2.0.2",
-    "commander": "^2.9.0",
-    "express": "^4.13.3",
-    "fairmont": "2.0.1",
-    "js-yaml": "^3.4.0",
-    "jsck": "^0.3.0",
-    "jstransformer-stylus": "^1.4.0",
-    "key-forge": "^0.1.3",
-    "markdown-it": "^8.4.0",
-    "markdown-it-anchor": "^4.0.0",
-    "markdown-it-inline-comments": "^1.0.1",
-    "marked": "^0.3.5",
-    "mime": "^1.3.4",
-    "mime-types": "^2.1.6",
-    "panda-9000": "4.0.0-alpha-01",
-    "rimraf": "^2.4.3"
-  },
-  "devDependencies": {
-    "amen": "^1.0.0",
-    "json": "^9.0.6"
-  },
-  "scripts": {
-    "prepare": "coffee -o lib/ -c src/",
-    "test": "coffee test/index.coffee",
-    "watch": "coffee -o lib/ -cw src/",
-    "postpublish": "(json -f package.json version | xargs -I version git tag -am version version) && git push --tags"
-  },
+  "scripts": {},
   "repository": {
     "type": "git",
     "url": "git://github.com/pandastrike/haiku9.git"
@@ -59,10 +24,37 @@
     "asset",
     "compilation"
   ],
-  "author": "Dan Yoder <dan@pandastrike.com>",
+  "contributors": [
+    {
+      "name": "Dan Yoder",
+      "email": "dan@pandastrike.com"
+    },
+    {
+      "name": "David Harper",
+      "email": "david@pandastrike.com"
+    }
+  ],
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/pandastrike/haiku9/issues"
   },
-  "homepage": "https://github.com/pandastrike/haiku9"
+  "homepage": "https://github.com/pandastrike/haiku9",
+  "dependencies": {
+    "ajv": "^6.6.2",
+    "aws-sdk": "^2.387.0",
+    "colors": "^1.3.3",
+    "commander": "^2.19.0",
+    "mime": "^2.4.0",
+    "panda-parchment": "^4.2.0",
+    "panda-quill": "^3.4.5",
+    "panda-river": "^4.4.2",
+    "panda-serialize": "^0.4.0",
+    "panda-template": "^1.0.0",
+    "progress": "^2.0.3",
+    "sundog": "^3.0.0"
+  },
+  "devDependencies": {
+    "panda-9000": "^4.4.0",
+    "panda-builder": "^3.2.1"
+  }
 }

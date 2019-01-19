@@ -1,54 +1,42 @@
-{join} = require "path"
-program = require "commander"
-{call, read} = require "fairmont"
+import {join} from "path"
+import program from "commander"
+import {read} from "panda-quill"
+import h9 from "./index"
+import Help from "./help"
 
-require "./index"
-{run} = require "panda-9000"
+do ->
 
-# exit on ctrl-c, related signals
-# https://github.com/pandastrike/haiku9/issues/88
-process.on 'SIGHUP',  ()-> process.exit()
-process.on 'SIGINT',  ()-> process.exit()
-process.on 'SIGQUIT', ()-> process.exit()
-process.on 'SIGABRT', ()-> process.exit()
-process.on 'SIGTERM', ()-> process.exit()
-
-
-call ->
-
-  {version} = JSON.parse yield read join __dirname, "..", "package.json"
+  {version} = JSON.parse await read join __dirname, "..", "..",
+    "..", "package.json"
 
   program
-    .version(version)
+    .version version
 
   program
-    .command('serve')
-    .description('run a Web server to serve your content')
-    .action(-> run "serve")
+    .command "publish [environment]"
+    .description "Publish static site assets to AWS infrastructure,
+      for a given environment"
+    .action (environment) ->
+      if environment?
+        h9.publish environment
+      else
+        console.error "No environment has been provided."
+        console.error "Usage: h9 publish <environment>"
+        process.exit 1
 
   program
-    .command('build')
-    .description('compile the Website assets into the "target" directory')
-    .action(-> run "build")
+    .command "delete [environment]"
+    .description "Delete static site assets from AWS infrastructure,
+      for a given environment"
+    .action (environment) ->
+      if environment?
+        h9.teardown environment
+      else
+        console.error "No environment has been provided."
+        console.error "Usage: h9 delete <environment>"
+        process.exit 1
 
-  program
-    .command('publish [env]')
-    .description('deploy Website assets from "target" to AWS infrastructure')
-    .option("-f, --force", "force the upload of all files, ignoring cloud sync comparisons")
-    .option("--nobuild", "publish the repository without issuing a build job beforehand")
-    .action(
-      (env, options)->
-        if !env
-          console.error "No environment has been provided."
-          console.error "Usage: h9 publish <environment>"
-          process.exit 1
-
-        if options.nobuild
-          run "nobuildPublish", [env, options]
-        else
-          run "publish", [env, options]
-    )
-
+  program.help = Help
 
   # Begin execution.
-  program.parse(process.argv);
+  program.parse process.argv
