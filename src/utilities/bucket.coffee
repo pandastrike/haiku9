@@ -90,8 +90,9 @@ Utility = ({sundog, source, environment, site}) ->
         await _sync deletions, uploads, progress
 
   destroy = ->
-    await s3.bucketEmpty first names
-    await s3.bucketDelete name for name in names
+    if await s3.bucketHead first names
+      await s3.bucketEmpty first names
+      await s3.bucketDelete name for name in names
 
   {establish, getObjectTable, sync, delete: destroy}
 
