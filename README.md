@@ -18,6 +18,19 @@ npm install -g haiku9
 
 ## Configuration
 
+### AWS Profile
+H9 uses your AWS access to perform actions on your behalf.  Your environment needs access to AWS credentials that can be reached by the [`SharedIniFileCredentials` method](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/SharedIniFileCredentials.html)
+
+From that reference:
+> defaulting to `~/.aws/credentials` or defined by the `AWS_SHARED_CREDENTIALS_FILE` environment variable
+
+Within that file, you can assign credentials to multiple "profiles" for easy access.  H9 can accept that profile name as a command-line argument
+```
+h9 publish production -p "panda"
+```
+
+### H9 File
+
 At the root of your site, create a `h9.yaml` file. Here is an example for publishing to a hypothetical https://haiku9.pandastrike.com
 
 ```yaml
@@ -26,9 +39,6 @@ At the root of your site, create a `h9.yaml` file. Here is an example for publis
 # it match. Haiku9 also uses MD5 hashes to make sure existing bucket files
 # are current.
 source: build
-
-# Optional. The name of the AWS profile that Haiku will look for in your credentials file.  This will default to "default" if omitted.
-profile: panda
 
 # The root domain for your site.
 domain: pandastrike.com
@@ -61,7 +71,7 @@ environments:
   # configuration for the CloudFront distribution.
   production:
     hostnames:
-      - haikue
+      - haiku
     cache:
       expires: 1800 # 30 minutes
       ssl: true

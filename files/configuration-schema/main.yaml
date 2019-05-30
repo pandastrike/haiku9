@@ -2,11 +2,6 @@ type: object
 additionalProperties: false
 required: [ source, domain, region, site, environments ]
 properties:
-  profile:
-    description: |
-      The name of the AWS profile to access from your credentials document. Omitting this will cause Haiku to access profile "default"
-    type: string
-
   source:
     description: Directory where h9 can find assets to publish.
     type: string

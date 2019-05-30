@@ -14,9 +14,10 @@ do ->
 
   program
     .command "publish [environment]"
+    .option '-p, --profile [profile]', 'Name of AWS profile to use'
     .description "Publish static site assets to AWS infrastructure,
       for a given environment"
-    .action (environment) ->
+    .action (environment, options) ->
       if environment?
         h9.publish environment
       else
@@ -26,9 +27,10 @@ do ->
 
   program
     .command "delete [environment]"
+    .option '-p, --profile [profile]', 'Name of AWS profile to use'
     .description "Delete static site assets from AWS infrastructure,
       for a given environment"
-    .action (environment) ->
+    .action (environment, options) ->
       if environment?
         h9.teardown environment
       else

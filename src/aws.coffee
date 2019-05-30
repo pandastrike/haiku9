@@ -1,8 +1,8 @@
 import SDK from "aws-sdk"
 import Sundog from "sundog"
 
-setupSDK = (config) ->
-  profile = config.profile ? "default"
+setupSDK = (config, profile="default") ->
+  console.log "Using profile \"#{profile}\""
   SDK.config =
     credentials: new SDK.SharedIniFileCredentials {profile}
     region: config.region
