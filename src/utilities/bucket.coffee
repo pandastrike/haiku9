@@ -30,14 +30,15 @@ Utility = ({sundog, source, environment, site}) ->
   establish = ->
     (await _establish environment, name) for name in names
 
-    await s3.bucketSetWebsite (first names),
+    _site =
       index: site.index.toString()
       error: site.error.toString()
+    _redirect =
+      host: first names
+      protocol: if environment.cache?.ssl then "https" else "http"
 
-    for name in rest names
-      await s3.bucketSetWebsite name, false,
-        host: first names
-        protocol: if environment.cache?.ssl then "https" else "http"
+    await s3.bucketSetWebsite (first names), _site
+    await s3.bucketSetWebsite name, _site, _redirect for name in rest names
 
   # Scan for S3 bucket to form an ETag dictionary.
   scan = (name) ->
@@ -93,6 +94,8 @@ Utility = ({sundog, source, environment, site}) ->
     if await s3.bucketHead first names
       await s3.bucketEmpty first names
       await s3.bucketDelete name for name in names
+    else
+      console.log "Warning: #{first names} does not exist. Nothing to delete."
 
   {establish, getObjectTable, sync, delete: destroy}
 
