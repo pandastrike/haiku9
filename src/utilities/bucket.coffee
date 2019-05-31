@@ -38,7 +38,7 @@ Utility = ({sundog, source, environment, site}) ->
       protocol: if environment.cache?.ssl then "https" else "http"
 
     await s3.bucketSetWebsite (first names), _site
-    await s3.bucketSetWebsite name, _site, _redirect for name in rest names
+    await s3.bucketSetWebsite name, false, _redirect for name in rest names
 
   # Scan for S3 bucket to form an ETag dictionary.
   scan = (name) ->
