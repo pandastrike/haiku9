@@ -4,14 +4,12 @@ import {first} from "panda-parchment"
 import pandaTemplate from "panda-template"
 import {lookupS3HostedZoneID} from "./s3-hostedzone-ids"
 import {Helpers} from "sundog"
+{fullyQualify} = Helpers.url
 
 read = (name) ->
-  _read resolve __dirname, "..", "..", "..", "..", "..", "files",
-    "templates", name
+  _read resolve __dirname, "..", "..", "..", "files", "templates", name
 
 render = ({sundog, environment, region}) ->
-    {fullyQualify} = Helpers.url
-
     # Ready the template
     T = new pandaTemplate()
     template = await read "direct.hbs"

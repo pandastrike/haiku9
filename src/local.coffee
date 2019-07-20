@@ -1,19 +1,14 @@
-import {relative, join} from "path"
+import {relative, join, parse} from "path"
 import {second} from "panda-parchment"
 import {lsR, read, exists} from "panda-quill"
-import mime from "mime"
-import {md5, isReadableFile, strip} from "./helpers"
+import {strip, tripleJoin, md5, isReadableFile} from "./helpers"
 
 scanLocal = (config) ->
   config.local = hashes: {}
 
   for path in (await lsR config.source) when isReadableFile path
     config.local.hashes[relative config.source, path] =
-      md5 await do ->
-        if "text" in mime.getType path
-          Buffer.from await read path
-        else
-          await read path, "buffer"
+      md5 await read path, "buffer"
 
   config
 
@@ -31,10 +26,10 @@ reconcile = (config) ->
       false
 
   for key of remote.hashes when !(isFilePresent key)
-    config.tasks.deletions.push key
+    config.tasks.deletions.push (tripleJoin key)...
 
   for key in remote.directories when !(await isDirPresent key)
-    config.tasks.deletions.push key
+    config.tasks.deletions.push (tripleJoin key)...
 
   for key, hash of local.hashes when !(isCurrent key, hash)
     config.tasks.uploads.push key

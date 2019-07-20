@@ -11,7 +11,7 @@ Resources:
         DefaultCacheBehavior:
           AllowedMethods: ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
           CachedMethods: ["GET", "HEAD", "OPTIONS"]
-          Compress: true
+          Compress: false
           MinTTL: 0
           MaxTTL: 31536000
           DefaultTTL: {{expires}}

@@ -3,14 +3,12 @@ import {read as _read} from "panda-quill"
 import {first} from "panda-parchment"
 import pandaTemplate from "panda-template"
 import {Helpers} from "sundog"
+{fullyQualify} = Helpers.url
 
 read = (name) ->
-  _read resolve __dirname, "..", "..", "..", "..", "..", "files",
-    "templates", name
+  _read resolve __dirname, "..", "..", "..", "files", "templates", name
 
-render = ({sundog, environment, region}) ->
-    {fullyQualify} = Helpers.url
-    # Quirk of where we always put certs.
+render = ({sundog, environment, region}) ->    
     {fetch: _fetch} = sundog.ACM region: "us-east-1"
 
     fetch = (hostname) ->
