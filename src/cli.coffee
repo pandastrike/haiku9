@@ -19,7 +19,11 @@ do ->
       for a given environment"
     .action (environment, options) ->
       if environment?
-        h9.publish environment, options
+        try
+          await h9.publish environment, options
+        catch e
+          console.error "publish failed"
+          console.error e.stack
       else
         console.error "No environment has been provided."
         console.error "Usage: h9 publish <environment>"
@@ -32,7 +36,11 @@ do ->
       for a given environment"
     .action (environment, options) ->
       if environment?
-        h9.teardown environment, options
+        try
+          h9.teardown environment, options
+        catch e
+          console.error "teardown failed"
+          console.error e.stack
       else
         console.error "No environment has been provided."
         console.error "Usage: h9 delete <environment>"

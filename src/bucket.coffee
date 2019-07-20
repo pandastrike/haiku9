@@ -7,16 +7,18 @@ import {strip, tripleJoin, isTooLarge, gzip, brotli} from "./helpers"
 
 setupBucket = (config) ->
   s3 = config.sundog.S3()
-  {hostnames:names, cors} = config.environment.hostnames
+  {hostnames:names, cors} = config.environment
 
   for name in names
     await s3.bucketTouch name
     await s3.bucketSetACL name, "public-read"
     await s3.bucketSetCORS name, cors if cors
 
+  console.log join "identity", config.site.index.toString()
+
   site =
-    index: config.site.index.toString()
-    error: config.site.error.toString()
+    index: join "identity", config.site.index.toString()
+    error: join "identity", config.site.error.toString()
   redirect =
     host: first names
     protocol: if config.environment.cache?.ssl then "https" else "http"
@@ -79,18 +81,26 @@ _put = (config) ->
 
   (key, alias) ->
     path = join config.source, key
-    ContentType = mime.getType path
     file = await read path, "buffer"
-    ContentMD5 = md5 file
     keys = tripleJoin (alias ? key)
+
+    ACL = "public-read"
+    ContentType = mime.getType path
+    ContentMD5 = md5 file
 
     await Promise.all [
       upload bucket, keys[0], file,
-        {ACL: "public-read", ContentType, ContentMD5}
-      upload bucket, keys[1], (await gzip file),
-        {ACL: "public-read", ContentType, ContentMD5}
-      upload bucket, keys[2], (await brotli file),
-        {ACL: "public-read", ContentType, ContentMD5}
+        {ACL, ContentType, ContentMD5, ContentEncoding: "identity"}
+
+      do ->
+        {buffer, encoding} = await gzip file, ContentType
+        upload bucket, keys[1], buffer,
+          {ACL, ContentType, ContentMD5, ContentEncoding: encoding}
+
+      do ->
+        {buffer, encoding} = await brotli file, ContentType
+        upload bucket, keys[2], buffer,
+          {ACL, ContentType, ContentMD5, ContentEncoding: encoding}
     ]
 
 processUploads = (config) ->

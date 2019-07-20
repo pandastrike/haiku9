@@ -7,7 +7,7 @@ import AJV from "ajv"
 ajv = new AJV()
 
 read = (name) ->
-  _read resolve __dirname, "..", "..", "..", "files",
+  _read resolve __dirname, "..", "..", "..", "..", "files",
     "configuration-schema", name
 
 readConfiguration = (env, options) ->

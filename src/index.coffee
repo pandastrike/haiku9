@@ -1,3 +1,4 @@
+import "source-map-support/register"
 import "colors"
 import {flow} from "panda-garden"
 import readConfiguration from "./configuration"

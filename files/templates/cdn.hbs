@@ -1,8 +1,58 @@
 Resources:
-  {{#each endpoints}}
-  {{#with cloudfront}}
-  CloudFront{{../index}}:
+  EdgeLambdaRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      Path: "/"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: "AllowLambdaServiceToAssumeRole"
+            Effect: "Allow"
+            Action: [ "sts:AssumeRole" ]
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+                - "edgelambda.amazonaws.com"
+
+  EdgeLambda:
+    Type: AWS::Lambda::Function
+    DependsOn:
+      - EdgeLambdaRole
+    Properties:
+      Description: Edge Lambda for Haiku Deployment
+      Runtime: nodejs10.x
+      MemorySize: 128
+      Timeout: 5
+      Role: !GetAtt EdgeLambdaRole.Arn
+      Code:
+        ZipFile: !Sub |
+          exports.handler = function(event, context, callback) {
+            var prefix, request, type;
+            ({request} = event.Records[0].cf);
+            prefix = "/identity";
+            type = request.headers["accept-encoding"];
+            if (type != null) {
+              if ((/\*/.test(type)) || (/br/.test(type))) {
+                prefix = "/brotli";
+              } else if (/gzip/.test(type)) {
+                prefix = "/gzip";
+              }
+            }
+            request.uri = prefix + request.uri;
+            return callback(null, request);
+          };
+
+
+
+  {{#each cloudfront}}
+  CloudFront{{@index}}:
     Type: "AWS::CloudFront::Distribution"
+    {{#if (equal @index 0)}}
+    DependsOn:
+      - EdgeLambda
+    {{/if}}
     Properties:
       DistributionConfig:
         Aliases:
@@ -29,6 +79,11 @@ Resources:
           SmoothStreaming: false
           TargetOriginId: HaikuS3Origin
           ViewerProtocolPolicy: {{protocolPolicy}}
+          {{#if (equal @index 0)}}
+          LambdaFunctionAssociations:
+            - EventType: viewer-request
+              LambdaFunctionARN: !Ref EdgeLambda.Version
+          {{/if}}
         DefaultRootObject: ""
         Enabled: true
         HttpVersion: {{httpVersion}}
@@ -50,25 +105,23 @@ Resources:
           CloudFrontDefaultCertificate: true
           MinimumProtocolVersion: "SSLv3"
           {{/if}}
-  {{/with}}
+  {{/each}}
 
-  {{#with route53}}
-  DNS{{../index}}:
+  DNS:
     Type: AWS::Route53::RecordSetGroup
     DependsOn:
-      - CloudFront{{../index}}
+      {{#each cloudfront}}
+      - CloudFront{{@index}}
+      {{/each}}
     Properties:
       Comment: Media endpoint
-      HostedZoneId: {{hostedZoneID}}
+      HostedZoneId: {{route53.hostedZoneID}}
       RecordSets:
-        - Name: {{record.name}}
+        {{#each route53.record}}
+        - Name: {{name}}
           Type: A
           AliasTarget:
-            DNSName:
-              "Fn::GetAtt":
-                - "CloudFront{{../index}}"
-                - "DomainName"
+            DNSName: !GetAtt [ CloudFront{{@index}}, DomainName ]
             EvaluateTargetHealth: false
             HostedZoneId: Z2FDTNDATAQYW2
-  {{/with}}
-  {{/each}}
+        {{/each}}

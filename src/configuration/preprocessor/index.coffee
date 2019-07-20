@@ -26,9 +26,9 @@ setHostnames = (config) ->
 setHostedZone = (config) ->
   {hzGet} = config.sundog.Route53()
 
-  unless zone = await hzGet first config.environment.names
+  unless zone = await hzGet first config.environment.hostnames
     throw new Error "It appears you do not have a public hostedzone setup
-      for #{root first config.environment.names}  Without it, H9 cannot
+      for #{root first config.environment.hostnames}  Without it, H9 cannot
       setup the DNS records to route traffic to your bucket."
   else
     config.environment.hostedZoneID = zone
@@ -36,7 +36,7 @@ setHostedZone = (config) ->
 
 checkCacheHeaders = (config) ->
   if {headers} = config.environment.cache?
-    if (headers.length > 1) && ("*" in headers)
+    if (headers?.length > 1) && ("*" in headers)
       throw new Error "Incorrect header specificaton.  Wildcard cannot be used with other named headers."
   config
 

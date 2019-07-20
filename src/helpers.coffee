@@ -26,20 +26,32 @@ isTooLarge = (path) ->
   else
     false
 
-gzip = (buffer) ->
-  new Promise (resolve, reject) ->
-    zlib.gzip buffer, level: 9, (error, result) ->
-      if error
-        reject error
-      else
-        resolve result
+isCompressible = (buffer, type) ->
+  return false if buffer.length < 1000
+  return true if /^text\//.test type
+  return true if /^image\/svg/.test type
+  false
 
-brotli = (buffer) ->
-  new Promise (resolve, reject) ->
-    zlib.brotliCompress buffer, level: 10, (error, result) ->
-      if error
-        reject error
-      else
-        resolve result
+gzip = (buffer, type) ->
+  if isCompressible buffer, type
+    new Promise (resolve, reject) ->
+      zlib.gzip buffer, level: 9, (error, result) ->
+        if error
+          reject error
+        else
+          resolve buffer: result, encoding: "gzip"
+  else
+    buffer: buffer, encoding: "identity"
+
+brotli = (buffer, type) ->
+  if isCompressible buffer, type
+    new Promise (resolve, reject) ->
+      zlib.brotliCompress buffer, level: 10, (error, result) ->
+        if error
+          reject error
+        else
+          resolve resolve buffer: result, encoding: "br"
+  else
+    buffer: buffer, encoding: "identity"
 
 export {md5, isReadableFile, strip, tripleJoin, isTooLarge, gzip, brotli}
