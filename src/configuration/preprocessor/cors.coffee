@@ -63,4 +63,6 @@ setCORS = (config) ->
       # CF headers have undefined configuration. Warn the dev.
       printWarning()
 
+  config
+
 export default setCORS

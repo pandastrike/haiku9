@@ -1,4 +1,5 @@
 import {resolve} from "path"
+import {include} from "panda-parchment"
 import {read as _read} from "panda-quill"
 import {yaml} from "panda-serialize"
 import AJV from "ajv"
@@ -9,7 +10,7 @@ read = (name) ->
   _read resolve __dirname, "..", "..", "..", "files",
     "configuration-schema", name
 
-readConfiguration = ->
+readConfiguration = (env, options) ->
   path = resolve process.cwd(), "h9.yaml"
   try
     config = yaml await read path
@@ -19,11 +20,10 @@ readConfiguration = ->
 
   schema = yaml await read "main.yaml"
   schema.definitions = yaml await read "definitions.yaml"
-  isValid = ajv.validate schema, config
-  if !isValid
+  unless ajv.validate schema, config
     console.error yaml ajv.errors
     throw new Error()
 
-  config
+  include {env, options}, config
 
 export default readConfiguration

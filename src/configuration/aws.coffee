@@ -1,7 +1,9 @@
 import SDK from "aws-sdk"
 import Sundog from "sundog"
 
-setupSDK = (config, profile="default") ->
+setupSDK = (config) ->
+  profile = config.options.profile ? "default"
+
   console.log "H9: Using profile \"#{profile}\""
   SDK.config =
     credentials: new SDK.SharedIniFileCredentials {profile}
@@ -9,5 +11,7 @@ setupSDK = (config, profile="default") ->
     sslEnabled: true
 
   config.sundog = Sundog(SDK).AWS
+
+  config
 
 export default setupSDK
