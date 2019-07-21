@@ -6,7 +6,7 @@ import {Helpers} from "sundog"
 {fullyQualify} = Helpers.url
 
 read = (name) ->
-  _read resolve __dirname, "..", "..", "..", "files", "templates", name
+  _read resolve __dirname, "..", "..", "..", "..", "files", "templates", name
 
 render = (config) ->
 
@@ -18,8 +18,15 @@ render = (config) ->
           cannot locate a wildcard certificate in the us-east-1 region
           for #{hostname}"
 
+    compileLambda = ->
+      {region, environment} = config
+      {hostnames} = environment
+
+      blankBucketURL: "#{hostnames[0]}.s3-website-#{region}.amazonaws.com"
+
     compileCloudFront = ->
-      {hostnames, cache} = config.environment
+      {region, environment} = config
+      {hostnames, cache} = environment
       {ssl, protocol, httpVersion, priceClass, expires, headers} = cache
 
       for hostname in hostnames
@@ -48,6 +55,7 @@ render = (config) ->
       equal: (A, B) -> A == B
 
     T.render template,
+      lambda: compileLambda()
       cloudfront: await compileCloudFront()
       route53: compileRoute53()
 

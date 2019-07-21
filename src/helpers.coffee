@@ -1,10 +1,15 @@
 import Crypto from "crypto"
 import zlib from "zlib"
 import {parse, join} from "path"
+import {stat} from "panda-quill"
 
 # NOTE: S3 object PUT wants base64 encoded md5, but returns hex md5 ETags.
-md5 = (buffer) ->
-  Crypto.createHash('md5').update(buffer).digest("hex")
+md5 = (buffer, encoding) ->
+  switch encoding
+    when "hex", "base64"
+      Crypto.createHash('md5').update(buffer).digest(encoding)
+    else
+      throw new Error "must specify encoding for MD5 hash"
 
 isReadableFile = (path) -> (parse path).name[0] != "-"
 
@@ -26,32 +31,29 @@ isTooLarge = (path) ->
   else
     false
 
-isCompressible = (buffer, type) ->
+isCompressible = (buffer, accept) ->
   return false if buffer.length < 1000
-  return true if /^text\//.test type
-  return true if /^image\/svg/.test type
+  return true if (/^application\/json$/.test accept) ||
+    (/^application\/javascript$/.test accept) ||
+    (/^text\//.test accept) ||
+    (/^image\/svg/.test accept)
+
   false
 
-gzip = (buffer, type) ->
-  if isCompressible buffer, type
-    new Promise (resolve, reject) ->
-      zlib.gzip buffer, level: 9, (error, result) ->
-        if error
-          reject error
-        else
-          resolve buffer: result, encoding: "gzip"
-  else
-    buffer: buffer, encoding: "identity"
+gzip = (buffer) ->
+  new Promise (resolve, reject) ->
+    zlib.gzip buffer, level: 9, (error, result) ->
+      if error
+        reject error
+      else
+        resolve result
 
-brotli = (buffer, type) ->
-  if isCompressible buffer, type
-    new Promise (resolve, reject) ->
-      zlib.brotliCompress buffer, level: 10, (error, result) ->
-        if error
-          reject error
-        else
-          resolve resolve buffer: result, encoding: "br"
-  else
-    buffer: buffer, encoding: "identity"
+brotli = (buffer) ->
+  new Promise (resolve, reject) ->
+    zlib.brotliCompress buffer, level: 10, (error, result) ->
+      if error
+        reject error
+      else
+        resolve resolve result
 
-export {md5, isReadableFile, strip, tripleJoin, isTooLarge, gzip, brotli}
+export {md5, isReadableFile, strip, tripleJoin, isTooLarge, isCompressible, gzip, brotli}

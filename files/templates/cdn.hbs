@@ -29,18 +29,16 @@ Resources:
       Code:
         ZipFile: !Sub |
           exports.handler = function(event, context, callback) {
-            var prefix, request, type;
+            var request, type;
             ({request} = event.Records[0].cf);
-            prefix = "/identity";
             type = request.headers["accept-encoding"];
             if (type != null) {
               if ((/\*/.test(type)) || (/br/.test(type))) {
-                prefix = "/brotli";
+                request.origin.s3.domainName = "brotli-{{lambda.blankBucketURL}}";
               } else if (/gzip/.test(type)) {
-                prefix = "/gzip";
+                request.origin.s3.domainName = "gzip-{{lambda.blankBucketURL}}";
               }
             }
-            request.uri = prefix + request.uri;
             return callback(null, request);
           };
 
@@ -90,7 +88,11 @@ Resources:
         IPV6Enabled: false
         Origins:
           - Id: HaikuS3Origin
+            {{#if (equal @index 0)}}
+            DomainName: identity-{{bucketURL}}
+            {{else}}
             DomainName: {{bucketURL}}
+            {{/if}}
             OriginPath: ""
             CustomOriginConfig:
               HTTPPort: 80

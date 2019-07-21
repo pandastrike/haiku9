@@ -23,6 +23,14 @@ setHostnames = (config) ->
   config.environment.hostnames = names
   config
 
+setTypedHostnames = (config) ->
+  source = config.environment.hostnames[0]
+  config.environment.typedHostnames = [
+    "identity-#{source}", "gzip-#{source}", "brotli-#{source}"
+  ]
+
+  config
+
 setHostedZone = (config) ->
   {hzGet} = config.sundog.Route53()
 
@@ -43,6 +51,7 @@ checkCacheHeaders = (config) ->
 preprocess = flow [
   setEnvironment
   setHostnames
+  setTypedHostnames
   setHostedZone
   checkCacheHeaders
   setCORS

@@ -4,11 +4,12 @@ import {lsR, read, exists} from "panda-quill"
 import {strip, tripleJoin, md5, isReadableFile} from "./helpers"
 
 scanLocal = (config) ->
+  console.log "H9: scanning local files"
   config.local = hashes: {}
 
   for path in (await lsR config.source) when isReadableFile path
     config.local.hashes[relative config.source, path] =
-      md5 await read path, "buffer"
+      md5 (await read path, "buffer"), "hex"
 
   config
 
@@ -26,10 +27,10 @@ reconcile = (config) ->
       false
 
   for key of remote.hashes when !(isFilePresent key)
-    config.tasks.deletions.push (tripleJoin key)...
+    config.tasks.deletions.push key
 
   for key in remote.directories when !(await isDirPresent key)
-    config.tasks.deletions.push (tripleJoin key)...
+    config.tasks.deletions.push key
 
   for key, hash of local.hashes when !(isCurrent key, hash)
     config.tasks.uploads.push key

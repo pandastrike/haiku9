@@ -1,53 +1,77 @@
 import {relative, join} from "path"
 import mime from "mime"
+import ProgressBar from "progress"
 import {flow} from "panda-garden"
-import {first, second, rest, partition} from "panda-parchment"
-import {read, stat} from "panda-quill"
-import {strip, tripleJoin, isTooLarge, gzip, brotli} from "./helpers"
+import {first, second, rest, cat} from "panda-parchment"
+import {read} from "panda-quill"
+import {partition} from "panda-river"
+import {md5, strip, tripleJoin, isTooLarge, gzip, brotli, isCompressible} from "./helpers"
 
-setupBucket = (config) ->
+establishBuckets = (config) ->
+  console.log "H9: establishing buckets..."
   s3 = config.sundog.S3()
-  {hostnames:names, cors} = config.environment
+  {hostnames, typedHostnames, cors} = config.environment
 
-  for name in names
+  for name in cat typedHostnames, rest hostnames
     await s3.bucketTouch name
     await s3.bucketSetACL name, "public-read"
     await s3.bucketSetCORS name, cors if cors
 
-  console.log join "identity", config.site.index.toString()
+  config
+
+configureBucketSources = (config) ->
+  console.log "H9: setting up S3 static serving"
+  s3 = config.sundog.S3()
+  names = config.environment.typedHostnames
 
   site =
-    index: join "identity", config.site.index.toString()
-    error: join "identity", config.site.error.toString()
-  redirect =
-    host: first names
-    protocol: if config.environment.cache?.ssl then "https" else "http"
+    index: config.site.index.toString()
+    error: config.site.error.toString()
 
-  await s3.bucketSetWebsite (first names), site
-  await s3.bucketSetWebsite name, false, redirect for name in rest names
+  await s3.bucketSetWebsite name, site for name in names
+  config
+
+configureBucketRedirects = (config) ->
+  console.log "H9: setting up S3 redirects"
+  s3 = config.sundog.S3()
+  {hostnames:names, cache} = config.environment
+
+  for name in rest names
+    await s3.bucketSetWebsite name, false,
+      host: first names
+      protocol: if cache?.ssl then "https" else "http"
 
   config
 
+setupBucket = flow [
+  establishBuckets
+  configureBucketSources
+  configureBucketRedirects
+]
+
 emptyBucket = (config) ->
-  S3 = config.sundog.S3()
-  bucket = first config.environment.hostnames
-  await s3.bucketEmpty bucket if await s3.bucketHead bucket
+  console.log "H9: emptying buckets"
+  s3 = config.sundog.S3()
+  for bucket in config.environment.typedHostnames
+    await s3.bucketEmpty bucket if await s3.bucketHead bucket
   config
 
 teardownBucket = (config) ->
-  S3 = config.sundog.S3()
-  names = config.environment.hostnames
-  await s3.bucketDelete name for name in names
+  console.log "H9: bucket teardown"
+  s3 = config.sundog.S3()
+  {typedHostnames: source, hostnames} = config.environment
+  await s3.bucketDelete name for name in cat source, rest hostnames
   config
 
 scanBucket = (config) ->
-  bucket = first config.environment.hostnames
+  console.log "H9: scanning remote files"
+  bucket = first config.environment.typedHostnames
   {list} = config.sundog.S3()
   config.remote = hashes: {}, directories: []
 
-  for {Key, ETag} in await list bucket, "identity"
+  for {Key, ETag} in await list bucket
     if Key.match /.*\/$/
-      config.remote.directories.push relative "identity", Key
+      config.remote.directories.push Key
     else
       config.remote.hashes[Key] = second ETag.split "\""
 
@@ -69,46 +93,71 @@ setupProgressBar = (config) ->
   config
 
 processDeletions = (config) ->
-  for batch in partition 1000, config.tasks.deletions
-    await deleteBatch batch
-    progress.tick batch.length
+  console.log "H9: deleting old files"
+  {rmBatch} = config.sundog.S3()
+  {typedHostnames:names} = config.environment
+
+  for batch from partition 1000, config.tasks.deletions
+    await rmBatch names[0], batch
+    await rmBatch names[1], batch
+    await rmBatch names[2], batch
+    config.tasks.progress.tick batch.length
 
   config
 
 _put = (config) ->
   upload = config.sundog.S3().PUT.buffer
-  bucket = first config.environment.hostnames
+  identityBucket = config.environment.typedHostnames[0]
+  gzipBucket = config.environment.typedHostnames[1]
+  brotliBucket = config.environment.typedHostnames[2]
 
   (key, alias) ->
     path = join config.source, key
     file = await read path, "buffer"
-    keys = tripleJoin (alias ? key)
 
     ACL = "public-read"
-    ContentType = mime.getType path
-    ContentMD5 = md5 file
+    ContentMD5 = md5 file, "base64"
+    unless ContentType = mime.getType path
+      throw new Error "unknown file type at #{path}"
 
     await Promise.all [
-      upload bucket, keys[0], file,
+      upload identityBucket, (key ? alias), file,
         {ACL, ContentType, ContentMD5, ContentEncoding: "identity"}
 
       do ->
-        {buffer, encoding} = await gzip file, ContentType
-        upload bucket, keys[1], buffer,
-          {ACL, ContentType, ContentMD5, ContentEncoding: encoding}
+        if isCompressible file, ContentType
+          buffer = await gzip file
+          encoding = "gzip"
+          hash = md5 buffer, "base64"
+        else
+          buffer = file
+          encoding = "identity"
+          hash = ContentMD5
+
+        upload gzipBucket, (key ? alias), buffer,
+          {ACL, ContentType, ContentMD5: hash, ContentEncoding: encoding}
 
       do ->
-        {buffer, encoding} = await brotli file, ContentType
-        upload bucket, keys[2], buffer,
-          {ACL, ContentType, ContentMD5, ContentEncoding: encoding}
+        if isCompressible file, ContentType
+          buffer = await brotli file
+          encoding = "br"
+          hash = md5 buffer, "base64"
+        else
+          buffer = file
+          encoding = "identity"
+          hash = ContentMD5
+
+        upload brotliBucket, (key ? alias), buffer,
+          {ACL, ContentType, ContentMD5: hash, ContentEncoding: encoding}
     ]
 
 processUploads = (config) ->
-  put = _put first config.environment.hostnames
+  console.log "H9: upserting files"
+  put = _put config
 
-  for key in uploads
-    if await isTooLarge join source, key
-      progress.tick()
+  for key in config.tasks.uploads
+    if await isTooLarge join config.source, key
+      config.tasks.progress.tick()
       continue
 
     await put key

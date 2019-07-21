@@ -1,4 +1,5 @@
 import {flow} from "panda-garden"
+import {first} from "panda-parchment"
 import renderDirect from "./direct"
 import renderCDN from "./cdn"
 import {generateStackName} from "./helpers"
@@ -60,6 +61,7 @@ publishStack = flow [
 ]
 
 teardownStack = (config) ->
+  console.error "H9: Issuing CloudFront teardown..."
   {delete:destroy} = config.sundog.CloudFormation()
   await destroy generateStackName first config.environment.hostnames
   config
