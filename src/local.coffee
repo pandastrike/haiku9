@@ -1,5 +1,5 @@
 import {relative, join, parse} from "path"
-import {second} from "panda-parchment"
+import {second, toJSON} from "panda-parchment"
 import {lsR, read, exists} from "panda-quill"
 import {strip, tripleJoin, md5, isReadableFile} from "./helpers"
 
@@ -18,10 +18,10 @@ reconcile = (config) ->
   {source, local, remote} = config
   config.tasks = deletions: [], uploads: []
 
-  isFilePresent = (key) -> local[key]? || local[key + ".html"]?
+  isFilePresent = (key) -> local.hashes[key]? || local.hashes[key + ".html"]?
   isDirPresent = (key) -> exists join source, key
   isCurrent = (key, hash) ->
-    if remoteHash = remote[key] || remote[strip key]
+    if remoteHash = remote.hashes[key] || remote.hashes[strip key]
       hash == remoteHash
     else
       false

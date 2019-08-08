@@ -38,15 +38,10 @@ printWarning = ->
 
 permissiveHeaders = [
   "Accept",
-  "Accept-Charset",
-  "Accept-Datetime",
-  "Accept-Language",
+  "Accept-Encoding",
   "Access-Control-Request-Headers",
   "Access-Control-Request-Method",
-  "Authorization",
-  "Host",
-  "Origin",
-  "Referer"
+  "Authorization"
 ]
 
 defaultFlags = [ "default", "permissive", "wildstyle", "fuck-it", "fuck-this-thing-in-particular" ]
@@ -56,12 +51,24 @@ defaultFlags = [ "default", "permissive", "wildstyle", "fuck-it", "fuck-this-thi
 setCORS = (config) ->
   {cors, cache} = config.environment
   if cors?
-    if (isString cors) && (cors in defaultFlags)
+    if (isString cors) && (cors in defaultFlags) && (!cache.headers?)
       config.environment.cache.headers = permissiveHeaders
     else if !cache.headers?
       # There is an S3 CORS settting, and it's explict / detailed,
       # CF headers have undefined configuration. Warn the dev.
       printWarning()
+  else
+    config.environment.cors =
+      allowedHeaders: ["*"]
+      allowedMethods: ["GET"]
+      allowedOrigins: ["*"]
+      exposedHeaders: [
+        "Access-Control-Allow-Origin"
+        "Access-Control-Allow-Methods"
+        "Access-Control-Allow-Headers"
+        "ETag"
+      ]
+      maxAge: cache.expires ? 60
 
   config
 

@@ -14,6 +14,8 @@ announce = (config) ->
     console.log "  - Configuration: Direct S3 Serving.  HTTP-Only."
   console.error "  - Please wait..."
 
+  process.exit()
+
   config
 
 renderTemplate = (config) ->

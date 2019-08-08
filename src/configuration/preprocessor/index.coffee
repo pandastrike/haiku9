@@ -43,9 +43,17 @@ setHostedZone = (config) ->
   config
 
 checkCacheHeaders = (config) ->
-  if {headers} = config.environment.cache?
-    if (headers?.length > 1) && ("*" in headers)
+  if (headers = config.environment.cache?.headers)?
+    if (headers.length > 1) && ("*" in headers)
       throw new Error "Incorrect header specificaton.  Wildcard cannot be used with other named headers."
+  else
+    config.environment.cache.headers = [
+      "Accept",
+      "Accept-Encoding",
+      "Access-Control-Request-Headers",
+      "Access-Control-Request-Method",
+      "Authorization"
+    ]
   config
 
 preprocess = flow [

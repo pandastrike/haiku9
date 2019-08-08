@@ -15,7 +15,7 @@ isReadableFile = (path) -> (parse path).name[0] != "-"
 
 strip = (key) ->
   {name, dir, ext} = parse key
-  if ext == ".html" then join dir, name else key
+  if ext == ".html" then (join dir, name) else key
 
 tripleJoin = (key) -> join p, key for p in ["identity", "gzip", "brotli"]
 

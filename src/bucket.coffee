@@ -2,7 +2,7 @@ import {relative, join} from "path"
 import mime from "mime"
 import ProgressBar from "progress"
 import {flow} from "panda-garden"
-import {first, second, rest, cat} from "panda-parchment"
+import {first, second, rest, cat, toJSON} from "panda-parchment"
 import {read} from "panda-quill"
 import {partition} from "panda-river"
 import {md5, strip, tripleJoin, isTooLarge, gzip, brotli, isCompressible} from "./helpers"
@@ -79,14 +79,22 @@ scanBucket = (config) ->
 
 setupProgressBar = (config) ->
   {deletions, uploads} = config.tasks
+  console.log toJSON {deletions, uploads}, true
 
   total = deletions.length + uploads.length
   if total == 0
     console.error "H9: WARNING - S3 Bucket is already up-to-date.
       Nothing to sync.".yellow
   else
-    config.tasks.progress = new ProgressBar "syncing [:bar] :percent",
-      total: total
+    config.tasks.deletionProgress = new ProgressBar "syncing [:bar] :percent",
+      total: deletions.length
+      width: 40
+      complete: "="
+      incomplete: " "
+
+    config.tasks.uploadProgress = new ProgressBar "syncing [:bar] :percent",
+      total: uploads.length
+      width: 40
       complete: "="
       incomplete: " "
 
@@ -101,7 +109,7 @@ processDeletions = (config) ->
     await rmBatch names[0], batch
     await rmBatch names[1], batch
     await rmBatch names[2], batch
-    config.tasks.progress.tick batch.length
+    config.tasks.deletionProgress.tick batch.length
 
   config
 
@@ -121,7 +129,7 @@ _put = (config) ->
       throw new Error "unknown file type at #{path}"
 
     await Promise.all [
-      upload identityBucket, (key ? alias), file,
+      upload identityBucket, (alias ? key), file,
         {ACL, ContentType, ContentMD5, ContentEncoding: "identity"}
 
       do ->
@@ -134,7 +142,7 @@ _put = (config) ->
           encoding = "identity"
           hash = ContentMD5
 
-        upload gzipBucket, (key ? alias), buffer,
+        upload gzipBucket, (alias ? key), buffer,
           {ACL, ContentType, ContentMD5: hash, ContentEncoding: encoding}
 
       do ->
@@ -147,7 +155,7 @@ _put = (config) ->
           encoding = "identity"
           hash = ContentMD5
 
-        upload brotliBucket, (key ? alias), buffer,
+        upload brotliBucket, (alias ? key), buffer,
           {ACL, ContentType, ContentMD5: hash, ContentEncoding: encoding}
     ]
 
@@ -162,7 +170,7 @@ processUploads = (config) ->
 
     await put key
     await put key, strip key
-    config.tasks.progress.tick()
+    config.tasks.uploadProgress.tick()
 
   config
 
