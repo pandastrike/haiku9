@@ -1,10 +1,16 @@
 import SDK from "aws-sdk"
 import Sundog from "sundog"
 
-setupSDK = (config) ->
+setEnvironment = (config) ->
+  config.environment = config.environments[config.env]
+
+  unless config.environment?
+    throw new Error "No configuration for '#{config.env}'"
+
+
   profile = config.options.profile ? "default"
 
-  console.log "H9: Using profile \"#{profile}\""
+  console.error "H9: Using profile \"#{profile}\""
   SDK.config =
     credentials: new SDK.SharedIniFileCredentials {profile}
     region: config.region
@@ -14,4 +20,4 @@ setupSDK = (config) ->
 
   config
 
-export default setupSDK
+export default setEnvironment

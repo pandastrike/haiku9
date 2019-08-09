@@ -22,7 +22,7 @@ tripleJoin = (key) -> join p, key for p in ["identity", "gzip", "brotli"]
 isTooLarge = (path) ->
   {size} = await stat path
   if size > 4999999999
-    console.error "WARNING: The file #{path} is larger than 5GB and is
+    console.error "WARNING: The file #{path} is larger than 5 GB and is
     too large to store within a single S3 object.  Haiku9 currently
     does not support multi-object files, so it is skipping this file
     during the sync."
@@ -30,6 +30,11 @@ isTooLarge = (path) ->
     true
   else
     false
+
+lambdaSizeCheck = (path) ->
+  {size} = await stat path
+  if size > 49999999
+    throw new Error "The file #{path} is larger than 50 MB and is too large for AWS Lambda."
 
 isCompressible = (buffer, accept) ->
   return false if buffer.length < 1000
@@ -56,4 +61,5 @@ brotli = (buffer) ->
       else
         resolve resolve result
 
-export {md5, isReadableFile, strip, tripleJoin, isTooLarge, isCompressible, gzip, brotli}
+export {md5, isReadableFile, strip, tripleJoin, isTooLarge, lambdaSizeCheck,
+  isCompressible, gzip, brotli}

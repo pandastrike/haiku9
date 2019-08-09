@@ -8,7 +8,7 @@ import {partition} from "panda-river"
 import {md5, strip, tripleJoin, isTooLarge, gzip, brotli, isCompressible} from "./helpers"
 
 establishBuckets = (config) ->
-  console.log "H9: establishing buckets..."
+  console.error "H9: establishing buckets..."
   s3 = config.sundog.S3()
   {hostnames, typedHostnames, cors} = config.environment
 
@@ -20,7 +20,7 @@ establishBuckets = (config) ->
   config
 
 configureBucketSources = (config) ->
-  console.log "H9: setting up S3 static serving"
+  console.error "H9: setting up S3 static serving"
   s3 = config.sundog.S3()
   names = config.environment.typedHostnames
 
@@ -32,7 +32,7 @@ configureBucketSources = (config) ->
   config
 
 configureBucketRedirects = (config) ->
-  console.log "H9: setting up S3 redirects"
+  console.error "H9: setting up S3 redirects"
   s3 = config.sundog.S3()
   {hostnames:names, cache} = config.environment
 
@@ -50,21 +50,21 @@ setupBucket = flow [
 ]
 
 emptyBucket = (config) ->
-  console.log "H9: emptying buckets"
+  console.error "H9: emptying buckets"
   s3 = config.sundog.S3()
   for bucket in config.environment.typedHostnames
     await s3.bucketEmpty bucket if await s3.bucketHead bucket
   config
 
 teardownBucket = (config) ->
-  console.log "H9: bucket teardown"
+  console.error "H9: bucket teardown"
   s3 = config.sundog.S3()
   {typedHostnames: source, hostnames} = config.environment
   await s3.bucketDelete name for name in cat source, rest hostnames
   config
 
 scanBucket = (config) ->
-  console.log "H9: scanning remote files"
+  console.error "H9: scanning remote files"
   bucket = first config.environment.typedHostnames
   {list} = config.sundog.S3()
   config.remote = hashes: {}, directories: []
@@ -79,20 +79,18 @@ scanBucket = (config) ->
 
 setupProgressBar = (config) ->
   {deletions, uploads} = config.tasks
-  console.log toJSON {deletions, uploads}, true
 
   total = deletions.length + uploads.length
   if total == 0
-    console.error "H9: WARNING - S3 Bucket is already up-to-date.
-      Nothing to sync.".yellow
+    console.error "H9: S3 Bucket is already up-to-date.".yellow
   else
-    config.tasks.deletionProgress = new ProgressBar "syncing [:bar] :percent",
+    config.tasks.deletionProgress = new ProgressBar "deleting [:bar] :percent",
       total: deletions.length
       width: 40
       complete: "="
       incomplete: " "
 
-    config.tasks.uploadProgress = new ProgressBar "syncing [:bar] :percent",
+    config.tasks.uploadProgress = new ProgressBar "uploading [:bar] :percent",
       total: uploads.length
       width: 40
       complete: "="
@@ -101,7 +99,7 @@ setupProgressBar = (config) ->
   config
 
 processDeletions = (config) ->
-  console.log "H9: deleting old files"
+  console.error "H9: deleting old files"
   {rmBatch} = config.sundog.S3()
   {typedHostnames:names} = config.environment
 
@@ -160,7 +158,7 @@ _put = (config) ->
     ]
 
 processUploads = (config) ->
-  console.log "H9: upserting files"
+  console.error "H9: upserting files"
   put = _put config
 
   for key in config.tasks.uploads

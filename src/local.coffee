@@ -4,7 +4,7 @@ import {lsR, read, exists} from "panda-quill"
 import {strip, tripleJoin, md5, isReadableFile} from "./helpers"
 
 scanLocal = (config) ->
-  console.log "H9: scanning local files"
+  console.error "H9: scanning local files"
   config.local = hashes: {}
 
   for path in (await lsR config.source) when isReadableFile path
@@ -21,7 +21,7 @@ reconcile = (config) ->
   isFilePresent = (key) -> local.hashes[key]? || local.hashes[key + ".html"]?
   isDirPresent = (key) -> exists join source, key
   isCurrent = (key, hash) ->
-    if remoteHash = remote.hashes[key] || remote.hashes[strip key]
+    if (remoteHash = remote.hashes[key] ? remote.hashes[strip key])?
       hash == remoteHash
     else
       false

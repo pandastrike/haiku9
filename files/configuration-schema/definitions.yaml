@@ -50,13 +50,6 @@ environment:
           type: string
           enum: [ "http1.1", "http2" ]
 
-        ssl:
-          description:
-            Determines if CloudFront should use SSL when serving.  When this is
-            omitted, Haiku defaults to false. Don't forget to have your SSL cert
-            sorted before you set it to true.
-          type: boolean
-
         protocol:
           description:
             Sets the TLS protocol version to use when setting up your site to
@@ -100,6 +93,119 @@ environment:
           items:
             type: string
             minLength: 1
+
+        lambdas: {$ref: "#/definitions/edgeLambdas"}
+
+edgeLambdas:
+  description: >
+    Each CloudFront distribution can contain up to four edge lambda associations, one slot for viewer-request (before trying for a cache-hit), origin-request (after cache-miss, but before going to orign), origin-response (on return trip from origin, but before value is cached), viewer-response (after cache-hit and after response from origin).  You specify the runtime and source, and Haiku will sync the code, publish a new version of your lambda, and associate it with your CloudFront distribution.
+  type: object
+  additionalProperties: false
+  properties:
+    viewerRequest: {$ref: "#/definitions/viewerEdgeLambda"}
+    originRequest: {$ref: "#/definitions/originEdgeLambda"}
+    viewerResponse: {$ref: "#/definitions/viewerEdgeLambda"}
+    originResponse: {$ref: "#/definitions/originEdgeLambda"}
+
+viewerEdgeLambda:
+  description: >
+  type: object
+  additionalProperties: false
+  required: [runtime, src]
+  properties:
+    src:
+      description: >
+        The path to the ZIP archive containing your lambda codebase.
+      type: string
+    handler:
+      description: >
+        The path to the entry point on your lambda. Omitting this uses "index.handler"
+      type: string
+    timeout:
+      description: >
+        The Lambda timeout limit, in seconds. Viewer triggers are more limited and have a maximum value of 5. Haiku defaults to 5.
+      type: integer
+      minimum: 1
+      maximum: 5
+    tracingConfig:
+      description: >
+        Set Mode to Active to sample and trace a subset of incoming requests with AWS X-Ray. Haiku defaults to PassThrough.
+      type: string
+      enum: [Active, PassThrough]
+    runtime:
+      description: >
+         The runtime for your lambda, as supported by AWS.
+      type: string
+      enum:
+        - nodejs
+        - nodejs4.3
+        - nodejs6.10
+        - nodejs8.10
+        - nodejs10.x
+        - java8
+        - python2.7
+        - python3.6
+        - python3.7
+        - dotnetcore1.0
+        - dotnetcore2.0
+        - dotnetcore2.1
+        - nodejs4.3-edge
+        - go1.x
+        - ruby2.5
+
+originEdgeLambda:
+  description: >
+  type: object
+  additionalProperties: false
+  required: [runtime, src]
+  properties:
+    src:
+      description: >
+        The path to the ZIP archive containing your lambda codebase.
+      type: string
+    handler:
+      description: >
+        The path to the entry point on your lambda. Omitting this uses AWS's "index.handler"
+      type: string
+    memorySize:
+      description: >
+        The Lambda memory allocation in MB.  Larger values also get more network throughput and CPU horsepower, but the specifics on that are left murky by AWS docs. Minimum value is 128, and it must be specified as multiples of 64.  Haiku9 defaults to 128.
+      type: integer
+      minimum: 128
+      maximum: 3008
+      multipleOf: 64
+    timeout:
+      description: >
+        The Lambda timeout limit, in seconds. Origin triggers are more limited and have a maximum value of 30. Haiku defaults to 30.
+      type: integer
+      minimum: 1
+      maximum: 30
+    tracingConfig:
+      description: >
+        Set Mode to Active to sample and trace a subset of incoming requests with AWS X-Ray. Haiku defaults to PassThrough.
+      type: string
+      enum: [Active, PassThrough]
+    runtime:
+      description: >
+         The runtime for your lambda, as supported by AWS.
+      type: string
+      enum:
+        - nodejs
+        - nodejs4.3
+        - nodejs6.10
+        - nodejs8.10
+        - nodejs10.x
+        - java8
+        - python2.7
+        - python3.6
+        - python3.7
+        - dotnetcore1.0
+        - dotnetcore2.0
+        - dotnetcore2.1
+        - nodejs4.3-edge
+        - go1.x
+        - ruby2.5
+
 
 
 cors:

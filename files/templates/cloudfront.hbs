@@ -1,56 +1,7 @@
 Resources:
-  EdgeLambdaRole:
-    Type: "AWS::IAM::Role"
-    Properties:
-      Path: "/"
-      ManagedPolicyArns:
-        - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Sid: "AllowLambdaServiceToAssumeRole"
-            Effect: "Allow"
-            Action: [ "sts:AssumeRole" ]
-            Principal:
-              Service:
-                - "lambda.amazonaws.com"
-                - "edgelambda.amazonaws.com"
-
-  EdgeLambda:
-    Type: AWS::Lambda::Function
-    DependsOn:
-      - EdgeLambdaRole
-    Properties:
-      Description: Edge Lambda for Haiku Deployment
-      Runtime: nodejs10.x
-      MemorySize: 128
-      Timeout: 5
-      Role: !GetAtt EdgeLambdaRole.Arn
-      Code:
-        ZipFile: !Sub |
-          exports.handler = function(event, context, callback) {
-            var request, type;
-            ({request} = event.Records[0].cf);
-            type = request.headers["accept-encoding"];
-            if (type != null) {
-              if ((/\*/.test(type)) || (/br/.test(type))) {
-                request.origin.s3.domainName = "brotli-{{lambda.blankBucketURL}}";
-              } else if (/gzip/.test(type)) {
-                request.origin.s3.domainName = "gzip-{{lambda.blankBucketURL}}";
-              }
-            }
-            return callback(null, request);
-          };
-
-
-
   {{#each cloudfront}}
   CloudFront{{@index}}:
     Type: "AWS::CloudFront::Distribution"
-    {{#if (equal @index 0)}}
-    DependsOn:
-      - EdgeLambda
-    {{/if}}
     Properties:
       DistributionConfig:
         Aliases:
@@ -77,10 +28,12 @@ Resources:
           SmoothStreaming: false
           TargetOriginId: HaikuS3Origin
           ViewerProtocolPolicy: {{protocolPolicy}}
-          {{#if (equal @index 0)}}
+          {{#if lambdas}}
           LambdaFunctionAssociations:
-            - EventType: viewer-request
-              LambdaFunctionARN: !Ref EdgeLambda.Version
+            {{#each lambdas}}
+            - EventType: {{type}}
+              LambdaFunctionARN: {{arn}}
+            {{/each}}
           {{/if}}
         DefaultRootObject: ""
         Enabled: true
@@ -88,25 +41,16 @@ Resources:
         IPV6Enabled: false
         Origins:
           - Id: HaikuS3Origin
-            {{#if (equal @index 0)}}
-            DomainName: identity-{{bucketURL}}
-            {{else}}
             DomainName: {{bucketURL}}
-            {{/if}}
             OriginPath: ""
             CustomOriginConfig:
               HTTPPort: 80
               OriginProtocolPolicy: "http-only"
         PriceClass: PriceClass_{{priceClass}}
         ViewerCertificate:
-          {{#if certificate}}
           AcmCertificateArn: {{certificate}}
           SslSupportMethod: "sni-only"
           MinimumProtocolVersion: {{protocolVersion}}
-          {{else}}
-          CloudFrontDefaultCertificate: true
-          MinimumProtocolVersion: "SSLv3"
-          {{/if}}
   {{/each}}
 
   DNS:

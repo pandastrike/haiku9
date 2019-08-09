@@ -1,7 +1,11 @@
 type: object
 additionalProperties: false
-required: [ source, domain, region, site, environments ]
+required: [ name, source, domain, region, site, environments ]
 properties:
+  name:
+    description: The name for your project
+    type: string
+
   source:
     description: Directory where h9 can find assets to publish.
     type: string
