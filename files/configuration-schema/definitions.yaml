@@ -65,9 +65,8 @@ environment:
         expires:
           description:
             The maximum amount of time, in seconds, that an object stays
-            cached in the edge server before additional requests are forwarded
-            to the S3 bucket to check for updates.  When this value is omitted,
-            Haiku defaults to 60 seconds.
+            cached by the client (browser local cache).  When this value is
+            omitted, Haiku defaults to 86400 seconds (1 day).
           type: integer
           minimum: 0
           maximum: 3153600000
@@ -86,6 +85,7 @@ environment:
               multipleOf: 100
               minimum: 100
               maximum: 200
+
         headers:
           description:
             This sets the list of headers forwarded and cached by the CloudFront

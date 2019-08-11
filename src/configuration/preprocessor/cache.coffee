@@ -33,24 +33,22 @@ checkCacheHeaders = (config) ->
 expandTemplateConfig = (config) ->
   {region} = config
   {hostnames, cache} = config.environment
-  {priceClass, expires, cert, protocol, httpVersion, headers} = cache
+  {priceClass, cert, protocol, httpVersion, headers,
+    localMaxage, sharedMaxage} = cache
+
+  config.environment.cache.localMaxage = localMaxage ? 300
+  config.environment.cache.sharedMaxage = sharedMaxage ? 86400
 
   include config.environment.templateData,
     cloudfront: do ->
       for hostname, index in hostnames
         hostname: hostname
-        bucketURL: do ->
-          if index == 0
-            "identity-#{hostname}.s3-website-#{region}.amazonaws.com"
-          else
-            "#{hostname}.s3-website-#{region}.amazonaws.com"
+        bucketURL: hostname + ".s3.amazonaws.com"
         priceClass: priceClass ? "100"
-        expires: expires ? 60
-        protocolPolicy: if cert then "redirect-to-https" else "allow-all"
         protocolVersion: protocol ? "TLSv1.2_2018"
         httpVersion: httpVersion ? "http2"
         headers: headers ? []
-        certificate: if cert? then cert else false
+        certificate: cert
 
   config
 

@@ -4,7 +4,7 @@ import {Helpers} from "sundog"
 
 {root, fullyQualify} = Helpers.url
 
-setCoreHostnames = (config) ->
+setHostnames = (config) ->
   {domain, environment} = config
   {hostnames, apex} = environment
 
@@ -13,16 +13,6 @@ setCoreHostnames = (config) ->
   names.unshift domain  if apex == "primary"
   names.push domain     if apex == "secondary"
   config.environment.hostnames = names
-  config
-
-setTypedHostnames = (config) ->
-  source = config.environment.hostnames[0]
-  config.environment.typedHostnames = [
-    "identity-#{source}",
-    "gzip-#{source}",
-    "brotli-#{source}"
-  ]
-
   config
 
 setHostedZone = (config) ->
@@ -49,7 +39,6 @@ expandTemplateConfig = (config) ->
 
 setHostnames = flow [
   setCoreHostnames
-  setTypedHostnames
   setHostedZone
   expandTemplateConfig
 ]

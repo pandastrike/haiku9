@@ -1,0 +1,20 @@
+{
+  "name": "secondary-origin-request",
+  "version": "1.0.0",
+  "description": "Viewer Request Edge Lambda for Dashkite Site",
+  "main": "index.js",
+  "scripts": {
+    "build": "rm -rf node_modules lib deploy; mkdir lib; mkdir deploy; npm install; coffee --transpile --inline-map -o lib/ src/; rm -rf node_modules; npm install --only=production; cp -r node_modules lib/node_modules; zip -qr -9 package.zip lib; mv package.zip ../../../files/default-lambdas/primary/origin-request.zip"
+  },
+  "author": "David Harper",
+  "private": true,
+  "license": "NA",
+  "dependencies": {
+    "source-map-support": "^0.5.9"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.4.5",
+    "@babel/preset-env": "^7.4.5",
+    "coffeescript": "^2.4.1"
+  }
+}

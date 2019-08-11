@@ -1,8 +1,6 @@
 import {toJSON} from "panda-parchment"
 import mime from "mime"
 
-bucketURL = "www-staging.dashkite.com.s3-website-us-eas-1.amazonaws.com"
-
 lookupType = (request) ->
   if (type = mime.getType request.uri)?
     type
@@ -28,14 +26,8 @@ notAcceptable = (value) ->
       value: "*"
     ]
     "content-type": [
-        key: "Content-Type",
+        key: "Content-Type"
         value: "application/json"
     ]
 
-chooseOrigin = (acceptable) ->
-  switch acceptable
-    when "br" then "brotli-#{bucketURL}"
-    when "gzip" then "gzip-#{bucketURL}"
-    else "identity-#{bucketURL}"
-
-export {lookupType, isCompressible, notAcceptable, chooseOrigin}
+export {lookupType, isCompressible, notAcceptable}

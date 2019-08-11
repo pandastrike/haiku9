@@ -37,37 +37,6 @@
                     "value": "gzip, deflate, br"
                 }
             ]
-          },
-          "origin": {
-             "s3": {
-                     "domainName": "staging-www.dashkite.com",
-                     "region": "us-east-1",
-                     "authMethod": "none",
-                     "path": "",
-                     "customHeaders": {}
-                 }
-          }
-        },
-        "response": {
-          "status": "200",
-          "statusDescription": "OK",
-          "headers": {
-            "server": [
-              {
-                "key": "Server",
-                "value": "MyCustomOrigin"
-              }
-            ],
-            "set-cookie": [
-              {
-                "key": "Set-Cookie",
-                "value": "theme=light"
-              },
-              {
-                "key": "Set-Cookie",
-                "value": "sessionToken=abc123; Expires=Wed, 09 Jun 2021 10:18:14 GMT"
-              }
-            ]
           }
         }
       }

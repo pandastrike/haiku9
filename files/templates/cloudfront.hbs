@@ -1,6 +1,6 @@
 Resources:
-  {{#each cloudfront}}
-  CloudFront{{@index}}:
+  {{#with cloudfront.primary}}
+  CloudFrontPrimary:
     Type: "AWS::CloudFront::Distribution"
     Properties:
       DistributionConfig:
@@ -8,7 +8,7 @@ Resources:
           - {{hostname}}
         Comment: Static site deployed by Haiku9
         DefaultCacheBehavior:
-          AllowedMethods: ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+          AllowedMethods: ["GET", "HEAD", "OPTIONS"]
           CachedMethods: ["GET", "HEAD", "OPTIONS"]
           Compress: false
           MinTTL: 0
@@ -27,7 +27,7 @@ Resources:
             QueryStringCacheKeys: ["*"]
           SmoothStreaming: false
           TargetOriginId: HaikuS3Origin
-          ViewerProtocolPolicy: {{protocolPolicy}}
+          ViewerProtocolPolicy: redirect-to-https
           {{#if lambdas}}
           LambdaFunctionAssociations:
             {{#each lambdas}}
@@ -43,9 +43,53 @@ Resources:
           - Id: HaikuS3Origin
             DomainName: {{bucketURL}}
             OriginPath: ""
-            CustomOriginConfig:
-              HTTPPort: 80
-              OriginProtocolPolicy: "http-only"
+            S3OriginConfig:
+              OriginAccessIdentity: {{originAccessID}}
+        PriceClass: PriceClass_{{priceClass}}
+        ViewerCertificate:
+          AcmCertificateArn: {{certificate}}
+          SslSupportMethod: "sni-only"
+          MinimumProtocolVersion: {{protocolVersion}}
+  {{/with}}
+
+  {{#each cloudfront.secondaries}}
+  CloudFront{{@index}}:
+    Type: "AWS::CloudFront::Distribution"
+    Properties:
+      DistributionConfig:
+        Aliases:
+          - {{hostname}}
+        Comment: Static site deployed by Haiku9
+        DefaultCacheBehavior:
+          AllowedMethods: ["GET", "HEAD", "OPTIONS"]
+          CachedMethods: ["GET", "HEAD", "OPTIONS"]
+          Compress: false
+          MinTTL: 31536000
+          MaxTTL: 31536000
+          DefaultTTL: 31536000
+          ForwardedValues:
+            Cookies:
+              Forward: none
+            Headers: []
+            QueryString: false
+          SmoothStreaming: false
+          TargetOriginId: HaikuS3Origin
+          ViewerProtocolPolicy: redirect-to-https
+          LambdaFunctionAssociations:
+            {{#each lambdas}}
+            - EventType: {{type}}
+              LambdaFunctionARN: {{arn}}
+            {{/each}}
+        DefaultRootObject: ""
+        Enabled: true
+        HttpVersion: {{httpVersion}}
+        IPV6Enabled: false
+        Origins:
+          - Id: HaikuS3Origin
+            DomainName: {{bucketURL}}
+            OriginPath: ""
+            S3OriginConfig:
+              OriginAccessIdentity: {{originAccessID}}
         PriceClass: PriceClass_{{priceClass}}
         ViewerCertificate:
           AcmCertificateArn: {{certificate}}
@@ -56,14 +100,23 @@ Resources:
   DNS:
     Type: AWS::Route53::RecordSetGroup
     DependsOn:
-      {{#each cloudfront}}
+      - CloudFrontPrimary
+      {{#each cloudfront.secondaries}}
       - CloudFront{{@index}}
       {{/each}}
     Properties:
       Comment: Media endpoint
       HostedZoneId: {{route53.hostedZoneID}}
       RecordSets:
-        {{#each route53.record}}
+        {{#with route53.primary}}
+        - Name: {{name}}
+          Type: A
+          AliasTarget:
+            DNSName: !GetAtt [ CloudFrontPrimary, DomainName ]
+            EvaluateTargetHealth: false
+            HostedZoneId: Z2FDTNDATAQYW2
+        {{/with}}
+        {{#each route53.secondaries}}
         - Name: {{name}}
           Type: A
           AliasTarget:

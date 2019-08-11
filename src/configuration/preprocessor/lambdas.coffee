@@ -1,7 +1,13 @@
+import {flow} from "panda-garden"
 import {resolve} from "path"
 import {isEmpty, include, dashed, clone} from "panda-parchment"
+import {mkdir}, from "panda-quill"
 
-setLambdas = (config) ->
+buildDefault = (config) ->
+
+  config
+
+setDefaultLambdas = (config) ->
   {name, env} = config
   source = config.environment.hostnames[0]
   {edge} = config.environment
@@ -14,8 +20,36 @@ setLambdas = (config) ->
         src: resolve __dirname, "..", "..", "..", "..", "..",
         "files", "default-lambdas", "viewer-request.zip"
         handler: "lib/index.handler"
+      originRequest:
+        runtime: "nodejs10.x"
+        src: resolve __dirname, "..", "..", "..", "..", "..",
+        "files", "default-lambdas", "viewer-request.zip"
+        handler: "lib/index.handler"
+      originResponse:
+        runtime: "nodejs10.x"
+        src: resolve __dirname, "..", "..", "..", "..", "..",
+        "files", "default-lambdas", "viewer-request.zip"
+        handler: "lib/index.handler"
 
-  # Nest this for later processing.
+  config
+
+
+applyDefaultLambdas = flow [
+  buildDefault
+  configureDefault
+]
+
+
+setLambdas = (config) ->
+  config.environment.edge ?= {}
+
+  if isEmpty config.environment.edge
+    applyDefault config
+  else
+    config
+
+
+expandConfig = (config) ->
   edge = triggers: clone config.environment.edge
 
   for key of edge.triggers
@@ -39,4 +73,9 @@ setLambdas = (config) ->
   config.environment.edge.role = "haiku9-#{name}-#{env}-edge-lambdas"
   config
 
-export default setLambdas
+go = flow [
+  setLambdas
+  expandConfig
+]
+
+export default go

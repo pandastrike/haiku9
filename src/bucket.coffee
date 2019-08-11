@@ -7,6 +7,23 @@ import {read} from "panda-quill"
 import {partition} from "panda-river"
 import {md5, strip, tripleJoin, isTooLarge, gzip, brotli, isCompressible} from "./helpers"
 
+  FinalBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    DependsOn:
+      - FinalBucket
+    DeletionPolicy: Retain
+    Properties:
+      Bucket: {{name}}
+      PolicyDocument:
+        Statement:
+          - Action:
+              - "s3:GetObject"
+            Effect: "Allow"
+            Resource: "arn:aws:s3:::{{name}}/*"
+            Principal:
+              CanonicalUser: !GetAtt [ OriginAccess, S3CanonicalUserId ]
+  {{/if}}
+
 establishBuckets = (config) ->
   console.log "establishing buckets..."
   s3 = config.sundog.S3()
