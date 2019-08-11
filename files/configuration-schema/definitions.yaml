@@ -35,6 +35,9 @@ environment:
       enum: [ "primary", "secondary" ]
 
 
+    edge: {$ref: "#/definitions/edgeLambdas"}
+
+
     cache:
       description:
         Optional configuration for CloudFront to provide caching on the AWS
@@ -93,8 +96,6 @@ environment:
           items:
             type: string
             minLength: 1
-
-        lambdas: {$ref: "#/definitions/edgeLambdas"}
 
 edgeLambdas:
   description: >

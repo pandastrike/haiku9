@@ -2,6 +2,7 @@ import {join} from "path"
 import program from "commander"
 import {read} from "panda-quill"
 import h9 from "./index"
+import {bell} from "./utils"
 import Help from "./help"
 
 do ->
@@ -24,9 +25,11 @@ do ->
         catch e
           console.error "publish failed"
           console.error e.stack
+          console.log bell
       else
         console.error "No environment has been provided."
         console.error "Usage: h9 publish <environment>"
+        console.log bell
         process.exit 1
 
   program
@@ -41,9 +44,11 @@ do ->
         catch e
           console.error "teardown failed"
           console.error e.stack
+          console.log bell
       else
         console.error "No environment has been provided."
         console.error "Usage: h9 delete <environment>"
+        console.log bell
         process.exit 1
 
   program.help = Help

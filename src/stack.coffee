@@ -7,8 +7,8 @@ import pandaTemplate from "panda-template"
 T = new pandaTemplate()
 
 renderTemplate = (config) ->
-  console.error "H9: rendering cloudformation template"
-  process.exit()
+  console.log "rendering cloudformation template"
+
   {templateData} = config.environment
   template = await read resolve __dirname, "..", "..", "..",
     "files", "templates", "cloudfront.hbs"
@@ -17,12 +17,11 @@ renderTemplate = (config) ->
   config
 
 buildStack = (config) ->
-  {hostnames, template} = config.environment
-  # CloudFormation stack names must be [A-Za-z0-9-] and less than 128 characters
-  generateStackName = (name) -> name.replace(/\./g, "-")[...128]
+  {name, env, environment} = config
+  {hostnames, template} = environment
 
   config.environment.stack =
-    StackName: generateStackName first hostnames
+    StackName: "haiku9-#{name}-#{env}"
     Capabilities: ["CAPABILITY_IAM"]
     Tags: [{
       Key: "deployed by"
@@ -36,13 +35,20 @@ buildStack = (config) ->
   config
 
 deployStack = (config) ->
-  console.error "H9: publishing cloudformation stack"
-  {put} = config.sundog.CloudFormation()
-  await put config.environment.stack
+  console.log "publishing cloudformation stack"
+  {get, put, delete:_delete} = config.sundog.CloudFormation()
+  {stack} = config.environment
+
+  if (result = await get stack.StackName)
+    if result.StackStatus in ["ROLLBACK_COMPLETE", "ROLLBACK_FAILED"]
+      console.warn "removing inert stack #{stack.StackName}"
+      await _delete stack.StackName
+
+  await put stack
   config
 
 invalidateCache = (config) ->
-  console.error "H9: issuing cloudfront invalidation..."
+  console.log "issuing cloudfront invalidation..."
   {get, invalidate} = config.sundog.CloudFront()
   await invalidate await get first config.environment.hostnames
   config
@@ -55,7 +61,7 @@ publishStack = flow [
 ]
 
 teardownStack = (config) ->
-  console.error "H9: issuing cloudfront teardown..."
+  console.log "issuing cloudfront teardown..."
   {delete:destroy} = config.sundog.CloudFormation()
   await destroy generateStackName first config.environment.hostnames
   config

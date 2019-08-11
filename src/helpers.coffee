@@ -22,7 +22,7 @@ tripleJoin = (key) -> join p, key for p in ["identity", "gzip", "brotli"]
 isTooLarge = (path) ->
   {size} = await stat path
   if size > 4999999999
-    console.error "WARNING: The file #{path} is larger than 5 GB and is
+    console.warn "The file #{path} is larger than 5 GB and is
     too large to store within a single S3 object.  Haiku9 currently
     does not support multi-object files, so it is skipping this file
     during the sync."

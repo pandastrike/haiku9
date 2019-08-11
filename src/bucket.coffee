@@ -8,7 +8,7 @@ import {partition} from "panda-river"
 import {md5, strip, tripleJoin, isTooLarge, gzip, brotli, isCompressible} from "./helpers"
 
 establishBuckets = (config) ->
-  console.error "H9: establishing buckets..."
+  console.log "establishing buckets..."
   s3 = config.sundog.S3()
   {hostnames, typedHostnames, cors} = config.environment
 
@@ -20,7 +20,7 @@ establishBuckets = (config) ->
   config
 
 configureBucketSources = (config) ->
-  console.error "H9: setting up S3 static serving"
+  console.log "setting up S3 static serving"
   s3 = config.sundog.S3()
   names = config.environment.typedHostnames
 
@@ -32,7 +32,7 @@ configureBucketSources = (config) ->
   config
 
 configureBucketRedirects = (config) ->
-  console.error "H9: setting up S3 redirects"
+  console.log "setting up S3 redirects"
   s3 = config.sundog.S3()
   {hostnames:names, cache} = config.environment
 
@@ -50,21 +50,21 @@ setupBucket = flow [
 ]
 
 emptyBucket = (config) ->
-  console.error "H9: emptying buckets"
+  console.log "emptying buckets"
   s3 = config.sundog.S3()
   for bucket in config.environment.typedHostnames
     await s3.bucketEmpty bucket if await s3.bucketHead bucket
   config
 
 teardownBucket = (config) ->
-  console.error "H9: bucket teardown"
+  console.log "bucket teardown"
   s3 = config.sundog.S3()
   {typedHostnames: source, hostnames} = config.environment
   await s3.bucketDelete name for name in cat source, rest hostnames
   config
 
 scanBucket = (config) ->
-  console.error "H9: scanning remote files"
+  console.log "scanning remote files"
   bucket = first config.environment.typedHostnames
   {list} = config.sundog.S3()
   config.remote = hashes: {}, directories: []
@@ -82,7 +82,7 @@ setupProgressBar = (config) ->
 
   total = deletions.length + uploads.length
   if total == 0
-    console.error "H9: S3 Bucket is already up-to-date.".yellow
+    console.warn "S3 Bucket is already up-to-date."
   else
     config.tasks.deletionProgress = new ProgressBar "deleting [:bar] :percent",
       total: deletions.length
@@ -99,15 +99,16 @@ setupProgressBar = (config) ->
   config
 
 processDeletions = (config) ->
-  console.error "H9: deleting old files"
-  {rmBatch} = config.sundog.S3()
-  {typedHostnames:names} = config.environment
+  if config.tasks.deletions.length > 0
+    console.log "deleting old files"
+    {rmBatch} = config.sundog.S3()
+    {typedHostnames:names} = config.environment
 
-  for batch from partition 1000, config.tasks.deletions
-    await rmBatch names[0], batch
-    await rmBatch names[1], batch
-    await rmBatch names[2], batch
-    config.tasks.deletionProgress.tick batch.length
+    for batch from partition 1000, config.tasks.deletions
+      await rmBatch names[0], batch
+      await rmBatch names[1], batch
+      await rmBatch names[2], batch
+      config.tasks.deletionProgress.tick batch.length
 
   config
 
@@ -158,17 +159,18 @@ _put = (config) ->
     ]
 
 processUploads = (config) ->
-  console.error "H9: upserting files"
-  put = _put config
+  if config.tasks.uploads.length > 0
+    console.log "upserting files"
+    put = _put config
 
-  for key in config.tasks.uploads
-    if await isTooLarge join config.source, key
-      config.tasks.progress.tick()
-      continue
+    for key in config.tasks.uploads
+      if await isTooLarge join config.source, key
+        config.tasks.progress.tick()
+        continue
 
-    await put key
-    await put key, strip key
-    config.tasks.uploadProgress.tick()
+      await put key
+      await put key, strip key
+      config.tasks.uploadProgress.tick()
 
   config
 

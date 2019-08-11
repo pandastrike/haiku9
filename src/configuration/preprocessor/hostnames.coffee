@@ -51,7 +51,7 @@ setHostnames = flow [
   setCoreHostnames
   setTypedHostnames
   setHostedZone
-  expandTemplate
+  expandTemplateConfig
 ]
 
 export default setHostnames

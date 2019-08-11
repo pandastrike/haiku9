@@ -10,7 +10,7 @@ setEnvironment = (config) ->
 
   profile = config.options.profile ? "default"
 
-  console.error "H9: Using profile \"#{profile}\""
+  console.log "Using profile \"#{profile}\""
   SDK.config =
     credentials: new SDK.SharedIniFileCredentials {profile}
     region: config.region

@@ -10,20 +10,20 @@ read = (name) ->
   _read resolve __dirname, "..", "..", "..", "..", "files",
     "configuration-schema", name
 
-readConfiguration = (env, options) ->
+readConfiguration = (config) ->
   path = resolve process.cwd(), "h9.yaml"
   try
-    config = yaml await read path
+    _config = yaml await read path
   catch e
-    console.error "Error: Unable to read h9.yaml configuration at #{path}"
+    console.error "Unable to read h9.yaml configuration at #{path}"
     throw new Error()
 
   schema = yaml await read "main.yaml"
   schema.definitions = yaml await read "definitions.yaml"
-  unless ajv.validate schema, config
+  unless ajv.validate schema, _config
     console.error yaml ajv.errors
     throw new Error()
 
-  include {env, options}, config
+  include config, _config
 
 export default readConfiguration

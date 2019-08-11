@@ -4,7 +4,7 @@ import {lsR, read, exists} from "panda-quill"
 import {strip, tripleJoin, md5, isReadableFile} from "./helpers"
 
 scanLocal = (config) ->
-  console.error "H9: scanning local files"
+  console.log "scanning local files"
   config.local = hashes: {}
 
   for path in (await lsR config.source) when isReadableFile path
