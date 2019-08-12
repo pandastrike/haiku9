@@ -4,7 +4,7 @@
   "description": "Viewer Request Edge Lambda for Dashkite Site",
   "main": "index.js",
   "scripts": {
-    "build": "rm -rf node_modules lib deploy; mkdir lib; mkdir deploy; npm install; coffee --transpile --inline-map -o lib/ src/; rm -rf node_modules; npm install --only=production; cp -r node_modules lib/node_modules; cp src/environment.hbs lib/environment.hbs; rm lib/environment.js; cp -R lib/ ../../../files/default-lambdas/secondary/origin-request/lib"
+    "build": "rm -rf node_modules lib deploy; mkdir lib; mkdir deploy; npm install; coffee --transpile --inline-map -o lib/ src/; rm -rf node_modules; npm install --only=production; cp -r node_modules lib/node_modules; cp src/environment.hbs lib/environment.hbs; rm lib/environment.js; cp -R lib ../../../files/default-lambdas/secondary/origin-request"
   },
   "author": "David Harper",
   "private": true,

@@ -5,7 +5,7 @@ import {flow} from "panda-garden"
 import {logger, bell, stopwatch as Stopwatch} from "./utils"
 import readConfiguration from "./configuration"
 import {setupEdgeLambdas, teardownEdgeLambas} from "./lambdas"
-import {setupBucket, scanBucket, syncBucket, emptyBucket, teardownBucket} from "./bucket"
+import {setupBucket, scanBucket, syncBucket, teardownBucket} from "./bucket"
 import {scanLocal, reconcile} from "./local"
 import {publishStack, teardownStack} from "./stack"
 
@@ -36,7 +36,6 @@ teardown = flow [
   start
   readConfiguration
   teardownStack
-  emptyBucket
   teardownBucket
   teardownEdgeLambas
   end

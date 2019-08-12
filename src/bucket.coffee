@@ -7,64 +7,49 @@ import {read} from "panda-quill"
 import {partition} from "panda-river"
 import {md5, strip, tripleJoin, isTooLarge, gzip, brotli, isCompressible} from "./helpers"
 
-  FinalBucketPolicy:
-    Type: AWS::S3::BucketPolicy
-    DependsOn:
-      - FinalBucket
-    DeletionPolicy: Retain
-    Properties:
-      Bucket: {{name}}
-      PolicyDocument:
-        Statement:
-          - Action:
-              - "s3:GetObject"
-            Effect: "Allow"
-            Resource: "arn:aws:s3:::{{name}}/*"
-            Principal:
-              CanonicalUser: !GetAtt [ OriginAccess, S3CanonicalUserId ]
-  {{/if}}
-
-establishBuckets = (config) ->
-  console.log "establishing buckets..."
+establishBucket = (config) ->
+  console.log "establishing bucket..."
   s3 = config.sundog.S3()
-  {hostnames, typedHostnames, cors} = config.environment
+  {hostnames, cors} = config.environment
 
-  for name in cat typedHostnames, rest hostnames
-    await s3.bucketTouch name
-    await s3.bucketSetACL name, "public-read"
-    await s3.bucketSetCORS name, cors if cors
+  await s3.bucketTouch first hostnames
+  await s3.bucketSetCORS (first hostnames), cors if cors
 
   config
 
-configureBucketSources = (config) ->
-  console.log "setting up S3 static serving"
+addOriginAccess = (config) ->
   s3 = config.sundog.S3()
-  names = config.environment.typedHostnames
+  {get, create} = config.sundog.CloudFront().originAccess
 
-  site =
-    index: config.site.index.toString()
-    error: config.site.error.toString()
+  name = config.environment.edge.originAccess
+  unless (OAID = await get name)
+    OAID = (await create name).CloudFrontOriginAccessIdentity
 
-  await s3.bucketSetWebsite name, site for name in names
-  config
+  include config.environment.templateData.cloudfront.primary,
+    originAccessID: OAID.Id
 
-configureBucketRedirects = (config) ->
-  console.log "setting up S3 redirects"
-  s3 = config.sundog.S3()
-  {hostnames:names, cache} = config.environment
 
-  for name in rest names
-    await s3.bucketSetWebsite name, false,
-      host: first names
-      protocol: if cache?.ssl then "https" else "http"
+  name = config.environment.hostnames[0]
+  await s3.bucketSetPolicy name, toJSON
+    Version: "2008-10-17"
+    Statement: [
+      Effect: "Allow"
+      Principal:
+        CanonicalUser: OAID.S3CanonicalUserId
+      Action: "s3:GetObject"
+      Resource: "arn:aws:s3:::#{name}/*"
+    ]
 
   config
 
 setupBucket = flow [
-  establishBuckets
-  configureBucketSources
-  configureBucketRedirects
+  establishBucket
+  addOriginAccess
 ]
+
+
+
+
 
 emptyBucket = (config) ->
   console.log "emptying buckets"
@@ -79,6 +64,20 @@ teardownBucket = (config) ->
   {typedHostnames: source, hostnames} = config.environment
   await s3.bucketDelete name for name in cat source, rest hostnames
   config
+
+teardownAccessOriginID = (config) ->
+  {delete: teardown} = config.sundog.CloudFront().originAccess
+  await teardown config.environment.edge.originAccess
+  config
+
+teardownBucket = flow [
+  emptyBucket
+  _teardownBucket
+  teardownAccessOriginID
+]
+
+
+
 
 scanBucket = (config) ->
   console.log "scanning remote files"
@@ -197,4 +196,4 @@ syncBucket = flow [
   processUploads
 ]
 
-export {setupBucket, scanBucket, syncBucket, emptyBucket, teardownBucket}
+export {setupBucket, scanBucket, syncBucket, teardownBucket}

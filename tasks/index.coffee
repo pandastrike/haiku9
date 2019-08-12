@@ -35,10 +35,12 @@ shell = (str, path) ->
 
 define "edge:clean", ->
   await rmr "files/default-lambdas"
-  await mkdirp "0777", "files/default-lambdas/primary"
+  await mkdirp "0777", "files/default-lambdas/primary/origin-request/lib"
+  await mkdirp "0777", "files/default-lambdas/primary/origin-response/lib"
   await mkdirp "0777", "files/default-lambdas/secondary/origin-request/lib"
 
 define "edge:build", [ "edge:clean" ], ->
   await shell "npm run build", "edge-lambdas/primary/viewer-request"
   await shell "npm run build", "edge-lambdas/primary/origin-request"
+  await shell "npm run build", "edge-lambdas/primary/origin-response"
   await shell "npm run build", "edge-lambdas/secondary/origin-request"

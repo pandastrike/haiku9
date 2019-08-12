@@ -31,10 +31,12 @@ isTooLarge = (path) ->
   else
     false
 
-lambdaSizeCheck = (path) ->
+lambdaSizeCheck = (type, path) ->
   {size} = await stat path
-  if size > 49999999
-    throw new Error "The file #{path} is larger than 50 MB and is too large for AWS Lambda."
+  if (/origin/.test type) && (size > 49999999)
+    throw new Error "The file #{path} is larger than 50 MB and is too large for #{type} edge lambdas"
+  if (/viewer/.test type) && (size > 999999)
+    throw new Error "The file #{path} is larger than 1 MB and is too large for #{type} edge lambdas"
 
 isCompressible = (buffer, accept) ->
   return false if buffer.length < 1000

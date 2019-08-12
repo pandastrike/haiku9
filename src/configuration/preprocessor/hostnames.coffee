@@ -1,5 +1,5 @@
 import {flow} from "panda-garden"
-import {first} from "panda-parchment"
+import {first, rest} from "panda-parchment"
 import {Helpers} from "sundog"
 
 {root, fullyQualify} = Helpers.url
@@ -32,8 +32,10 @@ expandTemplateConfig = (config) ->
   config.environment.templateData =
     route53:
       hostedZoneID: hostedZoneID
-      record: do ->
-        name: fullyQualify hostname for hostname in hostnames
+      primary:
+        name: fullyQualify first hostnames
+      secondaries: do ->
+        name: fullyQualify hostname for hostname in rest hostnames
 
   config
 

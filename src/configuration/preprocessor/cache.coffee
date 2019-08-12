@@ -1,5 +1,5 @@
 import {flow} from  "panda-garden"
-import {first, include} from "panda-parchment"
+import {first, include, rest} from "panda-parchment"
 
 import setCORS from "./cors"
 
@@ -33,22 +33,31 @@ checkCacheHeaders = (config) ->
 expandTemplateConfig = (config) ->
   {region} = config
   {hostnames, cache} = config.environment
-  {priceClass, cert, protocol, httpVersion, headers,
-    localMaxage, sharedMaxage} = cache
-
-  config.environment.cache.localMaxage = localMaxage ? 300
-  config.environment.cache.sharedMaxage = sharedMaxage ? 86400
+  {priceClass, cert, protocol, httpVersion, headers, expires} = cache
 
   include config.environment.templateData,
-    cloudfront: do ->
-      for hostname, index in hostnames
+    cloudfront:
+      primary: do ->
+        hostname = first hostnames
+
         hostname: hostname
         bucketURL: hostname + ".s3.amazonaws.com"
+        expires: expires ? 86400
         priceClass: priceClass ? "100"
         protocolVersion: protocol ? "TLSv1.2_2018"
         httpVersion: httpVersion ? "http2"
         headers: headers ? []
         certificate: cert
+
+      secondaries: do ->
+        for hostname, index in rest hostnames
+          hostname: hostname
+          bucketURL: hostname + ".s3.amazonaws.com"
+          priceClass: priceClass ? "100"
+          protocolVersion: protocol ? "TLSv1.2_2018"
+          httpVersion: httpVersion ? "http2"
+          certificate: cert
+
 
   config
 

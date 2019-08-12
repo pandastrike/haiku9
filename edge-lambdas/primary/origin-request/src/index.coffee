@@ -1,9 +1,13 @@
 import "source-map-support/register"
 import {join} from "path"
+import indexResponse from "./index-response"
 
 handler = (event, context, callback) ->
   try
     {request} = event.Records[0].cf
+
+    if request.url == "/"
+      return callback null, await indexResponse request
 
     switch request.headers["accept-encoding"][0].value
       when "br"

@@ -30,47 +30,23 @@ logger = ->
 
 
 print = (ps) ->
-  ps.stdout.on "data", (data) -> process.stdout.write data.toString()
-  ps.stderr.on "data", (data) -> process.stderr.write data.toString()
-  ps.on "error", (error) -> console.error error
+  new Promise (resolve, reject) ->
+    ps.stdout.on "data", (data) -> process.stdout.write data.toString()
+    ps.stderr.on "data", (data) -> process.stderr.write data.toString()
+    ps.on "error", (error) ->
+      console.error error
+      reject()
+    ps.on "close", (exitCode) ->
+      if exitCode == 0
+        resolve()
+      else
+        console.error "Exited with non-zero code, #{exitCode}"
+        reject()
 
-shell = (str) ->
+
+shell = (str, path) ->
   [command, args...] = w str
-  print await spawn command, args
+  print await spawn command, args, cwd: resolvePath process.cwd(), path
 
 
-clean = -> await rmr "haiku9-deploy"
-
-copy = (source, target) -> await shell "cp #{original} #{target}"
-
-compile = (source, target) ->
-  await mkdirp target "0777"
-  await shell "cp -R #{source} #{target}"
-
-  template = await read resolve target, "environment.hbs"
-
-
-
-
-
-# Make a directory at the specified path if it doesn't already exist.
-safe_mkdir = (path, mode) ->
-  if await exists path
-    console.error "Warning: #{path} exists. Skipping."
-    return
-
-  mode ||= "0777"
-  await mkdirp mode, path
-
-# Copy a file to the target, but only if it doesn't already exist.
-safe_cp = (original, target) ->
-  if await exists target
-    console.error "Warning: #{target} exists. Skipping."
-    return
-
-  if await isDirectory original
-    await shell "cp -R #{original} #{target}"
-  else
-    await shell "cp #{original} #{target}"
-
-export {bell, stopwatch, logger}
+export {bell, stopwatch, logger, shell}

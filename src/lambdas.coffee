@@ -1,7 +1,7 @@
 import ProgressBar from "progress"
 import {flow} from "panda-garden"
 import {dashed, merge, second, toJSON, sleep} from "panda-parchment"
-import {read} from "panda-quill"
+import {read, rmr} from "panda-quill"
 import {partition} from "panda-river"
 import {md5, lambdaSizeCheck} from "./helpers"
 
@@ -52,9 +52,14 @@ scanLocal = (config) ->
   console.log "scanning local Edge Lambda code"
   config.local = lambdas: {}
 
-  for name, lambda of config.environment.edge.triggers
-    config.local.lambdas["#{dashed name}.zip"] = lambda
-    config.local.lambdas["#{dashed name}.zip"].hash =
+  for name, lambda of config.environment.edge.primary
+    config.local.lambdas["primary/#{dashed name}.zip"] = lambda
+    config.local.lambdas["primary/#{dashed name}.zip"].hash =
+      md5 (await read lambda.src, "buffer"), "hex"
+
+  for name, lambda of config.environment.edge.secondary
+    config.local.lambdas["secondary/#{dashed name}.zip"] = lambda
+    config.local.lambdas["secondary/#{dashed name}.zip"].hash =
       md5 (await read lambda.src, "buffer"), "hex"
 
   config
@@ -119,7 +124,7 @@ processUploads = (config) ->
     upload = config.sundog.S3().PUT.file
 
     for {key, lambda} in config.tasks.uploads
-      await lambdaSizeCheck lambda.src
+      await lambdaSizeCheck lambda.type, lambda.src
       await upload bucket, key, lambda.src
       config.tasks.uploadProgress.tick()
 
@@ -129,11 +134,8 @@ setupRole = (config) ->
   {role} = config.sundog.IAM()
   RoleName = config.environment.edge.role
 
-  if (_role = await role.get config.environment.edge.role)
-    ARN = _role.Role.Arn
-  else
+  unless (_role = await role.get RoleName)
     _role = await role.create {RoleName, AssumeRolePolicyDocument}
-    ARN = _role.Role.Arn
     await role.attachPolicy RoleName, policyARN
 
   config.environment.edge.roleARN = _role.Role.Arn
@@ -175,19 +177,36 @@ publishLambdas = (config) ->
     console.log "publishing lambda #{lambda.name}"
     await publish lambda.name
 
-  for key, {name} of config.environment.edge.triggers
+  for key, {name} of config.environment.edge.primary
     versions = await listVersions name
     versions.sort (a, b) -> b.Version - a.Version
-    config.environment.edge.triggers[key].arn = versions[1].FunctionArn
+    config.environment.edge.primary[key].arn = versions[1].FunctionArn
+
+  for key, {name} of config.environment.edge.secondary
+    versions = await listVersions name
+    versions.sort (a, b) -> b.Version - a.Version
+    config.environment.edge.secondary[key].arn = versions[1].FunctionArn
 
   config
 
+cleanupDeployDir = (config) ->
+  console.log "cleaning Haiku deploy directory"
+  await rmr "haiku9-deploy"
+  config
+
 addToCacheTemplate = (config) ->
-  config.environment.templateData.cloudfront[0].lambdas = []
+  {primary, secondaries} = config.environment.templateData.cloudfront
+  primary.lambdas ?= []
+  secondaries[0].lambdas ?= [] for _, i in secondaries
 
-  for key, {type, arn} of config.environment.edge.triggers
-    config.environment.templateData.cloudfront[0].lambdas.push {type, arn}
+  for key, {type, arn} of primary
+    primary.lambdas.push {type, arn}
 
+  for key, {type, arn} of secondaries
+    for _, i in secondaries
+      secondaries[i].lambdas.push {type, arn}
+
+  config.environment.templateData.cloudfront = {primary, secondaries}
   config
 
 teardownOrchestrationBucket = (config) ->
@@ -211,6 +230,7 @@ syncCode = flow [
   processUploads
   setupRole
   publishLambdas
+  cleanupDeployDir
   addToCacheTemplate
 ]
 
