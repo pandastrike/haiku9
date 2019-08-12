@@ -1,4 +1,5 @@
 import {spawn} from "child_process"
+import {resolve as resolvePath} from "path"
 import moment from "moment"
 import "moment-duration-format"
 import {w} from "panda-parchment"
@@ -46,7 +47,10 @@ print = (ps) ->
 
 shell = (str, path) ->
   [command, args...] = w str
-  print await spawn command, args, cwd: resolvePath process.cwd(), path
+  if path
+    await print await spawn command, args, cwd: resolvePath process.cwd(), path
+  else
+    await print await spawn command, args, cwd: resolvePath process.cwd()
 
 
 export {bell, stopwatch, logger, shell}

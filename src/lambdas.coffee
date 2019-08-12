@@ -135,8 +135,11 @@ setupRole = (config) ->
   RoleName = config.environment.edge.role
 
   unless (_role = await role.get RoleName)
+    console.log "creating new execution role for edge lambdas."
     _role = await role.create {RoleName, AssumeRolePolicyDocument}
     await role.attachPolicy RoleName, policyARN
+    # The role can't be attached right away.
+    await sleep 15000
 
   config.environment.edge.roleARN = _role.Role.Arn
   config
@@ -197,12 +200,12 @@ cleanupDeployDir = (config) ->
 addToCacheTemplate = (config) ->
   {primary, secondaries} = config.environment.templateData.cloudfront
   primary.lambdas ?= []
-  secondaries[0].lambdas ?= [] for _, i in secondaries
+  secondaries[i].lambdas ?= [] for _, i in secondaries
 
-  for key, {type, arn} of primary
+  for key, {type, arn} of config.environment.edge.primary
     primary.lambdas.push {type, arn}
 
-  for key, {type, arn} of secondaries
+  for key, {type, arn} of config.environment.edge.secondary
     for _, i in secondaries
       secondaries[i].lambdas.push {type, arn}
 

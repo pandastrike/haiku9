@@ -27,13 +27,17 @@ reconcile = (config) ->
       false
 
   for key of remote.hashes when !(isFilePresent key)
-    config.tasks.deletions.push key
+    config.tasks.deletions.push join "identity", key
+    config.tasks.deletions.push join "gzip", key
+    config.tasks.deletions.push join "brotli", key
 
   for key in remote.directories when !(await isDirPresent key)
-    config.tasks.deletions.push key
+    config.tasks.deletions.push join "identity", key
+    config.tasks.deletions.push join "gzip", key
+    config.tasks.deletions.push join "brotli", key
 
   for key, hash of local.hashes when !(isCurrent key, hash)
-    config.tasks.uploads.push key
+    config.tasks.uploads.push join key
 
   config
 

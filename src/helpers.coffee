@@ -1,7 +1,8 @@
 import Crypto from "crypto"
 import zlib from "zlib"
-import {parse, join} from "path"
-import {stat} from "panda-quill"
+import JSZip from "jszip"
+import {parse, join, relative, resolve} from "path"
+import {stat, glob, read, write} from "panda-quill"
 
 # NOTE: S3 object PUT wants base64 encoded md5, but returns hex md5 ETags.
 md5 = (buffer, encoding) ->
@@ -63,5 +64,25 @@ brotli = (buffer) ->
       else
         resolve resolve result
 
+zip = (cwd, source, target) ->
+  files = await glob "#{source}/**", cwd
+  files.sort()
+
+  Zip = new JSZip()
+
+  for path in files
+    name = relative cwd, path
+    data = await read path, "buffer"
+    Zip.file name, data,
+      date: new Date "2019-08-12T19:17:56.050Z" # Lie to get consistent hash
+      createFolders: false
+
+  archive = await Zip.generateAsync
+    type: "nodebuffer"
+    compression: "DEFLATE"
+    compressionOptions: level: 9
+
+  await write (resolve cwd, target), archive
+
 export {md5, isReadableFile, strip, tripleJoin, isTooLarge, lambdaSizeCheck,
-  isCompressible, gzip, brotli}
+  isCompressible, gzip, brotli, zip}

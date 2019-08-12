@@ -28,13 +28,11 @@ Resources:
           SmoothStreaming: false
           TargetOriginId: HaikuS3Origin
           ViewerProtocolPolicy: redirect-to-https
-          {{#if lambdas}}
           LambdaFunctionAssociations:
             {{#each lambdas}}
             - EventType: {{type}}
               LambdaFunctionARN: {{arn}}
             {{/each}}
-          {{/if}}
         DefaultRootObject: ""
         Enabled: true
         HttpVersion: {{httpVersion}}
@@ -105,7 +103,7 @@ Resources:
       - CloudFront{{@index}}
       {{/each}}
     Properties:
-      Comment: Media endpoint
+      Comment: Haiku9 static site
       HostedZoneId: {{route53.hostedZoneID}}
       RecordSets:
         {{#with route53.primary}}

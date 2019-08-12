@@ -1,11 +1,11 @@
 import {flow} from "panda-garden"
-import {resolve, parse} from "path"
+import {resolve, parse, relative} from "path"
 import {resolve as resolveURL} from "url"
 import {isEmpty, include, dashed, clone} from "panda-parchment"
-import {read, rm, rmr, mkdir, write}, from "panda-quill"
+import {read, rm, rmr, mkdir, mkdirp, glob, write} from "panda-quill"
 import PandaTemplate from "panda-template"
 import {shell} from "../../utils"
-import {gzip, brotli} from "../../helpers"
+import {zip, gzip, brotli, md5} from "../../helpers"
 
 T = new PandaTemplate()
 
@@ -32,19 +32,19 @@ buildSecondaryLambda = (config) ->
   {hostnames} = config.environment
 
   sourceDir = resolve defaultDir, "secondary", "origin-request", "lib"
-  targetDir = resolve deployDir, "secondary", "lib"
+  targetDir = resolve deployDir, "secondary"
+  await mkdirp "0777", targetDir
   await shell "cp -R #{sourceDir} #{targetDir}"
 
-  path = resolve targetDir, "environment.hbs"
+  path = resolve targetDir, "lib", "environment.hbs"
   template = await read path
   await rm path
 
   url = "https://#{hostnames[0]}"
   file = T.render template, {url}
-  await write (resolve targetDir, "environment.js"), file
+  await write (resolve targetDir, "lib", "environment.js"), file
 
-  console.log "compressing redirect lambda for deploy."
-  await shell "zip -qr -9 origin-request.zip lib", "haiku9-deploy/secondary"
+  await zip targetDir, "lib", "origin-request.zip"
   await shell "rm -rf lib", "haiku9-deploy/secondary"
 
 applySecondaryLambdas = (config) ->
@@ -57,52 +57,56 @@ applySecondaryLambdas = (config) ->
     config.environment.edge.secondary =
       originRequest:
         runtime: "nodejs10.x"
-        src: resolve deployDir, "secondary", "origin-request.zip"
+        src: resolve "haiku9-deploy", "secondary", "origin-request.zip"
         handler: "lib/index.handler"
 
   config
 
 
-buildPrimaryDefaultLambdas = (config) ->
+buildPrimaryLambdas = (config) ->
   # Origin Requst Lambda
   console.log "  - Default Origin-Requst Lambda..."
-  {source, index:indexKey} = config.site
+  source = config.source
+  indexKey = config.site.index
   indexFile = await read (resolve source, indexKey), "buffer"
   indexFileGzip = await gzip indexFile
   indexFileBrotli = await brotli indexFile
 
   sourceDir = resolve defaultDir, "primary", "origin-request", "lib"
-  targetDir = resolve deployDir, "primary", "lib"
+  targetDir = resolve deployDir, "primary"
+  await mkdirp "0777", targetDir
   await shell "cp -R #{sourceDir} #{targetDir}"
 
-  path = resolve targetDir, "index-files"
+  path = resolve targetDir, "lib", "index-files"
   await mkdir "0777", path
   await write (resolve path, "identity"), indexFile
   await write (resolve path, "gzip"), indexFileGzip
   await write (resolve path, "brotli"), indexFileBrotli
 
-  await shell "zip -qr -9 origin-request.zip lib", "haiku9-deploy/primary"
+  await zip targetDir, "lib", "origin-request.zip"
   await shell "rm -rf lib", "haiku9-deploy/primary"
 
 
   # Origin Response Lambda
   console.log "  - Default Origin-Response Lambda..."
-  {source, error:errorKey} = config.site
+  source = config.source
+  errorKey = config.site.error
   errorFile = await read (resolve source, errorKey), "buffer"
   errorFileGzip = await gzip errorFile
   errorFileBrotli = await brotli errorFile
 
   sourceDir = resolve defaultDir, "primary", "origin-response", "lib"
-  targetDir = resolve deployDir, "primary", "lib"
+  targetDir = resolve deployDir, "primary"
+  await mkdirp "0777", targetDir
   await shell "cp -R #{sourceDir} #{targetDir}"
 
-  path = resolve targetDir, "error-files"
+  path = resolve targetDir, "lib", "error-files"
   await mkdir "0777", path
   await write (resolve path, "identity"), errorFile
   await write (resolve path, "gzip"), errorFileGzip
   await write (resolve path, "brotli"), errorFileBrotli
 
-  await shell "zip -qr -9 origin-response.zip lib", "haiku9-deploy/primary"
+  await zip targetDir, "lib", "origin-response.zip"
   await shell "rm -rf lib", "haiku9-deploy/primary"
 
 
@@ -111,7 +115,7 @@ applyDefaultPrimaryLambdas = (config) ->
 
   if isEmpty config.environment.edge.primary
     console.log "loading default static site lambdas"
-    await buildDefaultPrimaryLambdas config
+    await buildPrimaryLambdas config
 
     config.environment.edge.primary =
       viewerRequest:
@@ -120,12 +124,12 @@ applyDefaultPrimaryLambdas = (config) ->
         handler: "lib/index.handler"
       originRequest:
         runtime: "nodejs10.x"
-        src: resolve defaultDir, "primary", "viewer-request.zip"
+        src: resolve "haiku9-deploy", "primary", "origin-request.zip"
         handler: "lib/index.handler"
         memorySize: 1600
       originResponse:
         runtime: "nodejs10.x"
-        src: resolve defaultDir, "primary", "origin-response.zip"
+        src: resolve "haiku9-deploy", "primary", "origin-response.zip"
         handler: "lib/index.handler"
         memorySize: 1600
 
@@ -133,11 +137,11 @@ applyDefaultPrimaryLambdas = (config) ->
 
 expandConfig = (config) ->
   {name, env} = config
-  {hostnames, edge:{primary}} = config.environment
+  {hostnames, edge:{primary, secondary}} = config.environment
 
   for key of primary
     include primary[key],
-      name: "haiku9-#{name}-#{env}-#{dashed key}"
+      name: "haiku9-#{name}-#{env}-primary-#{dashed key}"
       type: dashed key
 
     primary[key].src = resolve process.cwd(), primary[key].src
@@ -152,6 +156,27 @@ expandConfig = (config) ->
       primary[key].timeout ?= 30
 
   config.environment.edge.primary = primary
+
+
+  for key of secondary
+    include secondary[key],
+      name: "haiku9-#{name}-#{env}-secondary-#{dashed key}"
+      type: dashed key
+
+    secondary[key].src = resolve process.cwd(), secondary[key].src
+    secondary[key].handler ?= "index.handler"
+    secondary[key].tracingConfig ?= "PassThrough"
+
+    if key in ["viewerRequest", "viewerResponse"]
+      include secondary[key], memorySize: 128
+      secondary[key].timeout ?= 5
+    else
+      secondary[key].memorySize ?= 128
+      secondary[key].timeout ?= 30
+
+  config.environment.edge.secondary = secondary
+
+
   config.environment.edge.src = "lambdas-#{hostnames[0]}"
   config.environment.edge.role = "haiku9-#{name}-#{env}-edge-lambdas"
   config.environment.edge.originAccess = "haiku9-#{name}-#{env}"

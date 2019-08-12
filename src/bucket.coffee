@@ -2,7 +2,7 @@ import {relative, join} from "path"
 import mime from "mime"
 import ProgressBar from "progress"
 import {flow} from "panda-garden"
-import {first, second, rest, cat, toJSON} from "panda-parchment"
+import {first, second, rest, cat, include, toJSON} from "panda-parchment"
 import {read} from "panda-quill"
 import {partition} from "panda-river"
 import {md5, strip, tripleJoin, isTooLarge, gzip, brotli, isCompressible} from "./helpers"
@@ -54,15 +54,15 @@ setupBucket = flow [
 emptyBucket = (config) ->
   console.log "emptying buckets"
   s3 = config.sundog.S3()
-  for bucket in config.environment.typedHostnames
-    await s3.bucketEmpty bucket if await s3.bucketHead bucket
+  bucket = config.environment.hostnames[0]
+  await s3.bucketEmpty bucket if await s3.bucketHead bucket
   config
 
-teardownBucket = (config) ->
+_teardownBucket = (config) ->
   console.log "bucket teardown"
   s3 = config.sundog.S3()
-  {typedHostnames: source, hostnames} = config.environment
-  await s3.bucketDelete name for name in cat source, rest hostnames
+  bucket = config.environment.hostnames[0]
+  await s3.bucketDelete bucket
   config
 
 teardownAccessOriginID = (config) ->
@@ -81,15 +81,17 @@ teardownBucket = flow [
 
 scanBucket = (config) ->
   console.log "scanning remote files"
-  bucket = first config.environment.typedHostnames
+  bucket = first config.environment.hostnames
   {list} = config.sundog.S3()
   config.remote = hashes: {}, directories: []
 
-  for {Key, ETag} in await list bucket
+  for {Key, ETag} in await list bucket, "identity"
+    key = (rest (Key.split "identity/")).join "identity/"
+
     if Key.match /.*\/$/
-      config.remote.directories.push Key
+      config.remote.directories.push key
     else
-      config.remote.hashes[Key] = second ETag.split "\""
+      config.remote.hashes[key] = second ETag.split "\""
 
   config
 
@@ -118,34 +120,33 @@ processDeletions = (config) ->
   if config.tasks.deletions.length > 0
     console.log "deleting old files"
     {rmBatch} = config.sundog.S3()
-    {typedHostnames:names} = config.environment
+    bucket = config.environment.hostnames[0]
 
     for batch from partition 1000, config.tasks.deletions
-      await rmBatch names[0], batch
-      await rmBatch names[1], batch
-      await rmBatch names[2], batch
+      await rmBatch bucket, batch
       config.tasks.deletionProgress.tick batch.length
 
   config
 
 _put = (config) ->
   upload = config.sundog.S3().PUT.buffer
-  identityBucket = config.environment.typedHostnames[0]
-  gzipBucket = config.environment.typedHostnames[1]
-  brotliBucket = config.environment.typedHostnames[2]
+  bucket = config.environment.hostnames[0]
 
   (key, alias) ->
     path = join config.source, key
     file = await read path, "buffer"
 
-    ACL = "public-read"
+    identityKey = join "identity", (alias ? key)
+    gzipKey = join "gzip", (alias ? key)
+    brotliKey = join "brotli", (alias ? key)
+
     ContentMD5 = md5 file, "base64"
     unless ContentType = mime.getType path
       throw new Error "unknown file type at #{path}"
 
     await Promise.all [
-      upload identityBucket, (alias ? key), file,
-        {ACL, ContentType, ContentMD5, ContentEncoding: "identity"}
+      upload bucket, identityKey, file,
+        {ContentType, ContentMD5, ContentEncoding: "identity"}
 
       do ->
         if isCompressible file, ContentType
@@ -157,8 +158,8 @@ _put = (config) ->
           encoding = "identity"
           hash = ContentMD5
 
-        upload gzipBucket, (alias ? key), buffer,
-          {ACL, ContentType, ContentMD5: hash, ContentEncoding: encoding}
+        upload bucket, gzipKey, buffer,
+          {ContentType, ContentMD5: hash, ContentEncoding: encoding}
 
       do ->
         if isCompressible file, ContentType
@@ -170,8 +171,8 @@ _put = (config) ->
           encoding = "identity"
           hash = ContentMD5
 
-        upload brotliBucket, (alias ? key), buffer,
-          {ACL, ContentType, ContentMD5: hash, ContentEncoding: encoding}
+        upload bucket, brotliKey, buffer,
+          {ContentType, ContentMD5: hash, ContentEncoding: encoding}
     ]
 
 processUploads = (config) ->

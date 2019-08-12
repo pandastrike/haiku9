@@ -1,3 +1,4 @@
+import {resolve} from "path"
 import SDK from "aws-sdk"
 import Sundog from "sundog"
 import {exists} from "panda-quill"

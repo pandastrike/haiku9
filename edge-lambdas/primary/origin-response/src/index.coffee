@@ -5,7 +5,8 @@ handler = (event, context, callback) ->
   try
     {request, response} = event.Records[0].cf
 
-    if response.status == 404
+    if response.status == 404 &&
+       request.headers["accept"][0].value == "text/html"
       return callback null, await errorResponse request
 
     callback null, response

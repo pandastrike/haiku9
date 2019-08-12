@@ -40,7 +40,7 @@ expandTemplateConfig = (config) ->
   config
 
 setHostnames = flow [
-  setCoreHostnames
+  setHostnames
   setHostedZone
   expandTemplateConfig
 ]
