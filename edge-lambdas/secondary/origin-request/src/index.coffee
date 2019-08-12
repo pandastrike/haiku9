@@ -10,7 +10,7 @@ handler = (event, context, callback) ->
   callback null,
     status: "301",
     statusDescription: "301 Moved Permanently"
-    body: toJSON error: "301 Moved Permanently"
+    body: JSON.stringify error: "301 Moved Permanently"
     bodyEncoding: "text"
     headers:
       "access-control-allow-origin": [

@@ -65,7 +65,6 @@ applySecondaryLambdas = (config) ->
 
 buildPrimaryLambdas = (config) ->
   # Origin Requst Lambda
-  console.log "  - Default Origin-Requst Lambda..."
   source = config.source
   indexKey = config.site.index
   indexFile = await read (resolve source, indexKey), "buffer"
@@ -88,7 +87,6 @@ buildPrimaryLambdas = (config) ->
 
 
   # Origin Response Lambda
-  console.log "  - Default Origin-Response Lambda..."
   source = config.source
   errorKey = config.site.error
   errorFile = await read (resolve source, errorKey), "buffer"

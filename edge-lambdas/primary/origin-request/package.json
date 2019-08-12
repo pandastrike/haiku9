@@ -10,6 +10,7 @@
   "private": true,
   "license": "NA",
   "dependencies": {
+    "panda-quill": "^3.4.5",
     "source-map-support": "^0.5.9"
   },
   "devDependencies": {

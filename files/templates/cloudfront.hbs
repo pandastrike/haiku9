@@ -42,7 +42,7 @@ Resources:
             DomainName: {{bucketURL}}
             OriginPath: ""
             S3OriginConfig:
-              OriginAccessIdentity: {{originAccessID}}
+              OriginAccessIdentity: "origin-access-identity/cloudfront/{{originAccessID}}"
         PriceClass: PriceClass_{{priceClass}}
         ViewerCertificate:
           AcmCertificateArn: {{certificate}}
