@@ -6,6 +6,12 @@ import {lookupType, isCompressible, notAcceptable} from "./utils"
 handler = (event, context, callback) ->
   {request} = event.Records[0].cf
 
+  console.log
+    input:
+      uri: request.uri
+      accept: request.headers["accept"]?[0]?.value
+      acceptEncoding: request.headers["accept-encoding"]?[0]?.value
+
   # Negotiate the final "Accept" Header and assign to request
   try
     header = request.headers["accept"]?[0]?.value ?  "*/*"
@@ -40,6 +46,12 @@ handler = (event, context, callback) ->
     key: "Accept-Encoding"
     value: acceptable
   ]
+
+  console.log
+    output:
+      uri: request.uri
+      accept: request.headers["accept"][0].value
+      acceptEncoding: request.headers["accept-encoding"][0].value
 
   callback null, request
 

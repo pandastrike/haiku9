@@ -214,17 +214,24 @@ addToCacheTemplate = (config) ->
 
 teardownOrchestrationBucket = (config) ->
   console.log "tearing down edge lambda orchestration bucket"
-  {bucketEmpty, bucketDelete} = config.sundog.S3()
+  {bucketHead, bucketEmpty, bucketDelete} = config.sundog.S3()
   bucket = config.environment.edge.src
-  await bucketEmpty bucket
-  await bucketDelete bucket
+  if await bucketHead bucket
+    await bucketEmpty bucket
+    await bucketDelete bucket
   config
 
 teardownRole = (config) ->
   console.log "tearing down edge lambda IAM role"
   {role} = config.sundog.IAM()
+  RoleName = config.environment.edge.role
 
-  await role.delete config.environment.edge.role
+  if (_role = await role.get RoleName)
+    await role.detachPolicy RoleName, policyARN
+    # The role can't be detached right away.
+    await sleep 15000
+    await role.delete config.environment.edge.role
+
   config
 
 syncCode = flow [

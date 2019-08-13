@@ -66,6 +66,7 @@ _teardownBucket = (config) ->
   config
 
 teardownAccessOriginID = (config) ->
+  console.log "origin access ID teardown"
   {delete: teardown} = config.sundog.CloudFront().originAccess
   await teardown config.environment.edge.originAccess
   config

@@ -6,6 +6,8 @@ import pandaTemplate from "panda-template"
 
 T = new pandaTemplate()
 
+generateStackName = (config) -> "haiku9-#{config.name}-#{config.env}"
+
 renderTemplate = (config) ->
   console.log "rendering cloudformation template"
 
@@ -17,11 +19,10 @@ renderTemplate = (config) ->
   config
 
 buildStack = (config) ->
-  {name, env, environment} = config
-  {hostnames, template} = environment
+  {hostnames, template} = config.environment
 
   config.environment.stack =
-    StackName: "haiku9-#{name}-#{env}"
+    StackName: generateStackName config
     Capabilities: ["CAPABILITY_IAM"]
     Tags: [{
       Key: "deployed by"
@@ -43,6 +44,7 @@ deployStack = (config) ->
     if result.StackStatus in ["ROLLBACK_COMPLETE", "ROLLBACK_FAILED"]
       console.warn "removing inert stack #{stack.StackName}"
       await _delete stack.StackName
+      console.log "continuing with deploy"
 
   await put stack
   config
@@ -63,7 +65,7 @@ publishStack = flow [
 teardownStack = (config) ->
   console.log "issuing cloudfront teardown..."
   {delete:destroy} = config.sundog.CloudFormation()
-  await destroy generateStackName first config.environment.hostnames
+  await destroy generateStackName config
   config
 
 export {publishStack, teardownStack}

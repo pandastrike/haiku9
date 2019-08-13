@@ -15,27 +15,36 @@ paths =
     body: (await read path, "buffer").toString "utf8"
     bodyEncoding: "text"
 
-response = (request) ->
+response = (request, response) ->
 
   encoding = request.headers["accept-encoding"][0].value
   {body, bodyEncoding} = await paths[encoding]
 
-  status: "200",
-  statusDescription: "200 OK"
-  body: body
-  bodyEncoding: bodyEncoding
-  headers:
-    "access-control-allow-origin": [
-      key: "Access-Control-Allow-Origin"
-      value: "*"
-    ]
-    "content-type": [
-        key: "Content-Type",
-        value: "text/html"
-    ]
-    "content-encoding": [
-        key: "Content-Encoding",
-        value: encoding
-    ]
+  response.status = "200"
+  response.statusDescription = "200 OK"
+  response.body = body
+  response.bodyEncoding = bodyEncoding
+
+  response.headers["access-control-allow-origin"] = [
+    key: "Access-Control-Allow-Origin"
+    value: "*"
+  ]
+
+  response.headers["content-type"] = [
+    key: "Content-Type"
+    value: "text/html"
+  ]
+
+  response.headers["content-encoding"] = [
+    key: "Content-Encoding"
+    value: encoding
+  ]
+
+  response.headers["vary"] = [
+    key: "Vary"
+    value: "Accept-Encoding"
+  ]
+
+  response
 
 export default response
