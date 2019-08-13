@@ -60,7 +60,7 @@
     "panda-template": "^1.1.0",
     "progress": "^2.0.3",
     "source-map-support": "^0.5.12",
-    "sundog": "file:../sundog"
+    "sundog": "^5.0.2"
   },
   "devDependencies": {
     "panda-9000": "^4.4.0",
