@@ -1,6 +1,6 @@
 {
   "name": "haiku9",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "Asset compilation, static-site generator",
   "main": "build/npm/src/index.js",
   "files": [
@@ -60,7 +60,7 @@
     "panda-template": "^1.1.0",
     "progress": "^2.0.3",
     "source-map-support": "^0.5.12",
-    "sundog": "^5.0.2"
+    "sundog": "5.0.2"
   },
   "devDependencies": {
     "panda-9000": "^4.4.0",

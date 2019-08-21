@@ -15,6 +15,7 @@ readConfiguration = (config) ->
   try
     _config = yaml await read path
   catch e
+    console.error e
     console.error "Unable to read h9.yaml configuration at #{path}"
     throw new Error()
 

@@ -118,6 +118,9 @@ viewerEdgeLambda:
       description: >
         The path to the ZIP archive containing your lambda codebase.
       type: string
+
+    zip:
+      type: boolean
     handler:
       description: >
         The path to the entry point on your lambda. Omitting this uses "index.handler"
@@ -164,6 +167,9 @@ originEdgeLambda:
       description: >
         The path to the ZIP archive containing your lambda codebase.
       type: string
+
+    zip:
+      type: boolean
     handler:
       description: >
         The path to the entry point on your lambda. Omitting this uses AWS's "index.handler"

@@ -108,6 +108,19 @@ buildPrimaryLambdas = (config) ->
   await shell "rm -rf lib", "haiku9-deploy/primary"
 
 
+compressLambda = (lambda) ->
+  {type, src} = lambda
+  # Origin Requst Lambda
+
+  sourceDir = resolve src
+  targetDir = resolve deployDir, "primary", "lib"
+  await mkdirp "0777", targetDir
+  await shell "cp -R #{sourceDir} #{targetDir}"
+
+  await zip (resolve deployDir, "primary"), "lib", "#{type}.zip"
+  await shell "rm -rf lib", "haiku9-deploy/primary"
+
+
 
 applyDefaultPrimaryLambdas = (config) ->
 
@@ -180,12 +193,20 @@ expandConfig = (config) ->
   config.environment.edge.originAccess = "haiku9-#{name}-#{env}"
   config
 
+checkForZipFlag = (config) ->
+  for _, lambda of config.environment.edge.primary when lambda.zip == true
+    await compressLambda lambda
+    lambda.src = resolve deployDir, "primary", "#{lambda.type}.zip"
+
+  config
+
 go = flow [
   cleanDirectory
   startEdgeConfig
   applySecondaryLambdas
   applyDefaultPrimaryLambdas
   expandConfig
+  checkForZipFlag
 ]
 
 export default go
