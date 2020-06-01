@@ -146,6 +146,7 @@ viewerEdgeLambda:
         - nodejs6.10
         - nodejs8.10
         - nodejs10.x
+        - nodejs12.x
         - java8
         - python2.7
         - python3.6
@@ -202,6 +203,7 @@ originEdgeLambda:
         - nodejs6.10
         - nodejs8.10
         - nodejs10.x
+        - nodejs12.x
         - java8
         - python2.7
         - python3.6

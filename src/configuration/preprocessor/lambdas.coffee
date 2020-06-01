@@ -56,7 +56,7 @@ applySecondaryLambdas = (config) ->
 
     config.environment.edge.secondary =
       originRequest:
-        runtime: "nodejs10.x"
+        runtime: "nodejs12.x"
         src: resolve "haiku9-deploy", "secondary", "origin-request.zip"
         handler: "lib/index.handler"
 
@@ -130,16 +130,16 @@ applyDefaultPrimaryLambdas = (config) ->
 
     config.environment.edge.primary =
       viewerRequest:
-        runtime: "nodejs10.x"
+        runtime: "nodejs12.x"
         src: resolve defaultDir, "primary", "viewer-request.zip"
         handler: "lib/index.handler"
       originRequest:
-        runtime: "nodejs10.x"
+        runtime: "nodejs12.x"
         src: resolve "haiku9-deploy", "primary", "origin-request.zip"
         handler: "lib/index.handler"
         memorySize: 1600
       originResponse:
-        runtime: "nodejs10.x"
+        runtime: "nodejs12.x"
         src: resolve "haiku9-deploy", "primary", "origin-response.zip"
         handler: "lib/index.handler"
         memorySize: 1600
