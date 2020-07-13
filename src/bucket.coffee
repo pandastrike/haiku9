@@ -5,6 +5,7 @@ import {flow} from "panda-garden"
 import {first, second, rest, cat, include, toJSON} from "panda-parchment"
 import {read} from "panda-quill"
 import {partition} from "panda-river"
+import {scanLocal, reconcile} from "./local"
 import {md5, strip, tripleJoin, isTooLarge, gzip, brotli, isCompressible} from "./helpers"
 
 establishBucket = (config) ->
