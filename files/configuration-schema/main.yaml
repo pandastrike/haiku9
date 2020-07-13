@@ -1,6 +1,6 @@
 type: object
 additionalProperties: false
-required: [ name, source, domain, region, environments ]
+required: [ name, domain, region, environments ]
 properties:
   name:
     description: The name for your project

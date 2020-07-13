@@ -192,10 +192,20 @@ processUploads = (config) ->
 
   config
 
-syncBucket = flow [
+_syncBucket = flow [
+  setupBucket
+  scanBucket
+  scanLocal
+  reconcile
   setupProgressBar
   processDeletions
   processUploads
 ]
 
-export {setupBucket, scanBucket, syncBucket, teardownBucket}
+syncBucket = (config) ->
+  if config.source?
+    _syncBucket config
+  else
+    config
+
+export {syncBucket, teardownBucket}
