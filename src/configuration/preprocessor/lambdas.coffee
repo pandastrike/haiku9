@@ -64,6 +64,9 @@ applySecondaryLambdas = (config) ->
 
 
 buildPrimaryLambdas = (config) ->
+  unless config.site?.index? && config.site?.error
+    throw new Error "The default origin-request and origin-response edge lambdas require site.index and site.error to be specified from an assets directory."
+
   # Origin Requst Lambda
   source = config.source
   indexKey = config.site.index

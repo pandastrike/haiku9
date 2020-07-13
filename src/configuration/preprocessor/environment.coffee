@@ -9,13 +9,15 @@ setEnvironment = (config) ->
   unless config.environment?
     throw new Error "No configuration for '#{config.env}'"
 
-  path = resolve config.source, config.site.index
-  unless await exists path
-    throw new Error "index file at #{path} does not exist"
+  if config.site?.index?
+    path = resolve config.source, config.site.index
+    unless await exists path
+      throw new Error "index file at #{path} does not exist"
 
-  path = resolve config.source, config.site.error
-  unless await exists path
-    throw new Error "error file at #{path} does not exist"
+  if config.site?.error?
+    path = resolve config.source, config.site.error
+    unless await exists path
+      throw new Error "error file at #{path} does not exist"
 
 
   profile = config.options.profile ? "default"

@@ -22,10 +22,12 @@ do ->
       if environment?
         try
           await h9.publish environment, options
+          process.exit 0
         catch e
           console.error "publish failed"
           console.error e.stack
           console.log bell
+          process.exit 1
       else
         console.error "No environment has been provided."
         console.error "Usage: h9 publish <environment>"
@@ -41,10 +43,12 @@ do ->
       if environment?
         try
           h9.teardown environment, options
+          process.exit 0
         catch e
           console.error "teardown failed"
           console.error e.stack
           console.log bell
+          process.exit 1
       else
         console.error "No environment has been provided."
         console.error "Usage: h9 delete <environment>"
