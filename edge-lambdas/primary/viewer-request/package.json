@@ -10,7 +10,7 @@
   "private": true,
   "license": "NA",
   "dependencies": {
-    "@hapi/accept": "^3.2.2",
+    "@hapi/accept": "^5.0.1",
     "mime": "^2.4.4",
     "panda-parchment": "^4.2.1",
     "source-map-support": "^0.5.9"
