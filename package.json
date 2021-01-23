@@ -18,11 +18,22 @@
     "url": "git://github.com/pandastrike/haiku9.git"
   },
   "keywords": [
+    "aws",
+    "amazon web services",
+    "cloudformation",
+    "s3",
+    "edge",
+    "edge lambda",
+    "web site",
     "blog",
-    "jekyll",
-    "harp",
+    "static",
+    "site",
+    "generator",
+    "static site generator",
+    "ssg",
     "asset",
-    "compilation"
+    "pipeline",
+    "asset pipeline",
   ],
   "contributors": [
     {
