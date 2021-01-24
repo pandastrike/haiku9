@@ -11,7 +11,7 @@
   "license": "NA",
   "dependencies": {
     "panda-quill": "^3.4.5",
-    "source-map-support": "^0.5.9"
+    "source-map-support": "^0.5.19"
   },
   "devDependencies": {
     "@babel/core": "^7.4.5",
