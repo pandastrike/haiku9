@@ -1,6 +1,6 @@
 {
   "name": "haiku9",
-  "version": "4.0.9",
+  "version": "4.1.0",
   "description": "Asset compilation, static-site generator",
   "main": "build/npm/src/index.js",
   "files": [
