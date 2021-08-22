@@ -42,7 +42,7 @@ do ->
     .action (environment, options) ->
       if environment?
         try
-          h9.teardown environment, options
+          await h9.teardown environment, options
           process.exit 0
         catch e
           console.error "teardown failed"
