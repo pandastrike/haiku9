@@ -23,8 +23,11 @@ setEnvironment = (config) ->
   profile = config.options.profile ? "default"
 
   console.log "Using profile \"#{profile}\""
+  _chain = new SDK.CredentialProviderChain()
+  _chain.providers.push new SDK.SharedIniFileCredentials {profile}
+
   SDK.config =
-    credentials: new SDK.SharedIniFileCredentials {profile}
+    credentials: await _chain.resolvePromise()
     region: config.region
     sslEnabled: true
 
